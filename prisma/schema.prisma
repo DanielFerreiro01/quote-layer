@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum QuoteType {
+  SOLAR
+  GYM
+}
+
+model Provider {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  configs QuoteConfig[]
+  quotes  Quote[]
+}
+
+model QuoteConfig {
+  id         String    @id @default(uuid())
+  providerId String
+  type       QuoteType
+  isActive   Boolean   @default(true)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  provider   Provider  @relation(fields: [providerId], references: [id])
+
+  solarConfig SolarConfig?
+
+  quotes Quote[]
+
+  @@unique([providerId, type])
+}
+
+model SolarConfig {
+  id            String @id @default(uuid())
+  quoteConfigId String @unique
+
+  baseCostPerKw             Float
+  electricityCostPerKwh     Float
+  annualElectricityIncrease Float
+
+  panelWattCapacity Int
+  sunHoursPerDay    Float
+  systemEfficiency Float
+
+  clientTypeMultiplier   Json
+  mountingTypeMultiplier Json
+
+  maintenanceAnnualRate Float
+  projectionYears       Int
+
+  quoteConfig QuoteConfig @relation(fields: [quoteConfigId], references: [id])
+}
+
+model Quote {
+  id            String   @id @default(uuid())
+  providerId    String
+  quoteConfigId String
+  type          QuoteType
+
+  input   Json
+  result  Json
+
+  createdAt DateTime @default(now())
+
+  provider    Provider    @relation(fields: [providerId], references: [id])
+  quoteConfig QuoteConfig @relation(fields: [quoteConfigId], references: [id])
+}
