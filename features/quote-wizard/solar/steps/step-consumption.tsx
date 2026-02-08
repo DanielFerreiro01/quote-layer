@@ -1,71 +1,84 @@
-'use client'
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { motion } from 'framer-motion'
-import { Sun, Moon, Blend, Zap } from 'lucide-react'
-import { Slider } from '@/components/ui/slider'
-import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
-import type { ConsumptionData, TimeProfile } from '@/lib/solar-types'
+import { motion } from "framer-motion";
+import { Sun, Moon, Blend, Zap } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import type { ConsumptionData, TimeProfile } from "@/lib/solar/solar-types";
 
 interface StepConsumptionProps {
-  data: ConsumptionData
-  onChange: (data: ConsumptionData) => void
-  errors?: Record<string, string>
+  data: ConsumptionData;
+  onChange: (data: ConsumptionData) => void;
+  errors?: Record<string, string>;
 }
 
-const timeProfiles: { value: TimeProfile; label: string; icon: React.ReactNode; description: string }[] = [
+const timeProfiles: {
+  value: TimeProfile;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}[] = [
   {
-    value: 'day',
-    label: 'Diurno',
+    value: "day",
+    label: "Diurno",
     icon: <Sun className="h-5 w-5" />,
-    description: 'Mayor consumo de día',
+    description: "Mayor consumo de día",
   },
   {
-    value: 'night',
-    label: 'Nocturno',
+    value: "night",
+    label: "Nocturno",
     icon: <Moon className="h-5 w-5" />,
-    description: 'Mayor consumo de noche',
+    description: "Mayor consumo de noche",
   },
   {
-    value: 'mixed',
-    label: 'Mixto',
+    value: "mixed",
+    label: "Mixto",
     icon: <Blend className="h-5 w-5" />,
-    description: 'Consumo equilibrado',
+    description: "Consumo equilibrado",
   },
-]
+];
 
 const consumptionLevels = [
-  { min: 0, max: 300, label: 'Bajo', description: 'Hogar pequeño' },
-  { min: 301, max: 600, label: 'Medio', description: 'Hogar típico' },
-  { min: 601, max: 1000, label: 'Alto', description: 'Hogar grande' },
-  { min: 1001, max: 2000, label: 'Muy Alto', description: 'Comercio pequeño' },
-  { min: 2001, max: 5000, label: 'Comercial', description: 'Negocio mediano' },
-  { min: 5001, max: 15000, label: 'Industrial', description: 'Gran consumidor' },
-]
+  { min: 0, max: 300, label: "Bajo", description: "Hogar pequeño" },
+  { min: 301, max: 600, label: "Medio", description: "Hogar típico" },
+  { min: 601, max: 1000, label: "Alto", description: "Hogar grande" },
+  { min: 1001, max: 2000, label: "Muy Alto", description: "Comercio pequeño" },
+  { min: 2001, max: 5000, label: "Comercial", description: "Negocio mediano" },
+  {
+    min: 5001,
+    max: 15000,
+    label: "Industrial",
+    description: "Gran consumidor",
+  },
+];
 
 function getConsumptionLevel(kwh: number) {
-  return consumptionLevels.find((level) => kwh >= level.min && kwh <= level.max) || consumptionLevels[consumptionLevels.length - 1]
+  return (
+    consumptionLevels.find((level) => kwh >= level.min && kwh <= level.max) ||
+    consumptionLevels[consumptionLevels.length - 1]
+  );
 }
 
 export function StepConsumption({ data, onChange }: StepConsumptionProps) {
   const handleKwhChange = (value: number[]) => {
-    onChange({ ...data, monthlyKwh: value[0] })
-  }
+    onChange({ ...data, monthlyKwh: value[0] });
+  };
 
   const handleProfileChange = (profile: TimeProfile) => {
-    onChange({ ...data, timeProfile: profile })
-  }
+    onChange({ ...data, timeProfile: profile });
+  };
 
-  const currentLevel = getConsumptionLevel(data.monthlyKwh)
+  const currentLevel = getConsumptionLevel(data.monthlyKwh);
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="space-y-8"
     >
       <div className="space-y-2">
@@ -129,7 +142,9 @@ export function StepConsumption({ data, onChange }: StepConsumptionProps) {
         </div>
 
         <div className="space-y-4">
-          <Label className="text-sm font-medium">Perfil de consumo horario</Label>
+          <Label className="text-sm font-medium">
+            Perfil de consumo horario
+          </Label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {timeProfiles.map((profile) => (
               <motion.button
@@ -139,18 +154,18 @@ export function StepConsumption({ data, onChange }: StepConsumptionProps) {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleProfileChange(profile.value)}
                 className={cn(
-                  'relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200',
+                  "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200",
                   data.timeProfile === profile.value
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border bg-card hover:border-primary/50 hover:bg-accent/50'
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border bg-card hover:border-primary/50 hover:bg-accent/50",
                 )}
               >
                 <div
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                    "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
                     data.timeProfile === profile.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {profile.icon}
@@ -158,10 +173,10 @@ export function StepConsumption({ data, onChange }: StepConsumptionProps) {
                 <div className="text-center">
                   <p
                     className={cn(
-                      'font-medium',
+                      "font-medium",
                       data.timeProfile === profile.value
-                        ? 'text-primary'
-                        : 'text-foreground'
+                        ? "text-primary"
+                        : "text-foreground",
                     )}
                   >
                     {profile.label}
@@ -183,10 +198,11 @@ export function StepConsumption({ data, onChange }: StepConsumptionProps) {
         >
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">Tip: </span>
-            Puedes encontrar tu consumo mensual en tu factura de luz. Busca el valor en kWh del último mes o el promedio de los últimos 12 meses.
+            Puedes encontrar tu consumo mensual en tu factura de luz. Busca el
+            valor en kWh del último mes o el promedio de los últimos 12 meses.
           </p>
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }

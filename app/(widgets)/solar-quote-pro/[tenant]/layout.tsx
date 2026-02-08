@@ -1,6 +1,6 @@
 // app/(widget)/solar-quote-pro/layout.tsx
-import { WidgetFooter } from "@/components/layout/widgets/WidgetFooter";
-import { WidgetHeader } from "@/components/layout/widgets/WidgetHeader";
+import { WidgetFooter } from "@/features/quote-wizard/components/WidgetFooter";
+import { WidgetHeader } from "@/features/quote-wizard/components/WidgetHeader";
 import { Sun } from "lucide-react";
 
 

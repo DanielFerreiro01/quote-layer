@@ -1,43 +1,50 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { MessageCircle, CheckCircle, ArrowRight, Mail, Phone } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import type { FormData, SolarCalculation } from '@/lib/solar-types'
-import { generateWhatsAppMessage } from '@/lib/solar-calculations'
+import { motion } from "framer-motion";
+import {
+  MessageCircle,
+  CheckCircle,
+  ArrowRight,
+  Mail,
+  Phone,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { FormData, SolarCalculation } from "@/lib/solar/solar-types";
+import { generateWhatsAppMessage } from "@/lib/solar/solar-calculations";
+
 
 interface StepCTAProps {
-  formData: FormData
-  calculation: SolarCalculation
+  formData: FormData;
+  calculation: SolarCalculation;
 }
 
-const WHATSAPP_NUMBER = '5491112345678'
+const WHATSAPP_NUMBER = "5491112345678";
 
 export function StepCTA({ formData, calculation }: StepCTAProps) {
-  const whatsappMessage = generateWhatsAppMessage(formData, calculation)
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`
+  const whatsappMessage = generateWhatsAppMessage(formData, calculation);
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
   const benefits = [
-    'Asesoramiento personalizado sin compromiso',
-    'Visita técnica para evaluar tu instalación',
-    'Financiamiento flexible disponible',
-    'Garantía extendida en equipos',
-  ]
+    "Asesoramiento personalizado sin compromiso",
+    "Visita técnica para evaluar tu instalación",
+    "Financiamiento flexible disponible",
+    "Garantía extendida en equipos",
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="space-y-8"
     >
       <div className="space-y-2 text-center">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           className="flex justify-center mb-4"
         >
           <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
@@ -48,7 +55,8 @@ export function StepCTA({ formData, calculation }: StepCTAProps) {
           ¡Tu cotización está lista!
         </h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Contacta con nuestro equipo para comenzar tu proyecto solar y obtener una propuesta detallada.
+          Contacta con nuestro equipo para comenzar tu proyecto solar y obtener
+          una propuesta detallada.
         </p>
       </div>
 
@@ -67,19 +75,27 @@ export function StepCTA({ formData, calculation }: StepCTAProps) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="text-left">
                     <p className="text-muted-foreground">Sistema</p>
-                    <p className="font-medium text-foreground">{calculation.systemSizeKw} kW</p>
+                    <p className="font-medium text-foreground">
+                      {calculation.systemSizeKw} kW
+                    </p>
                   </div>
                   <div className="text-left">
                     <p className="text-muted-foreground">Paneles</p>
-                    <p className="font-medium text-foreground">{calculation.panelCount} unidades</p>
+                    <p className="font-medium text-foreground">
+                      {calculation.panelCount} unidades
+                    </p>
                   </div>
                   <div className="text-left">
                     <p className="text-muted-foreground">Inversión</p>
-                    <p className="font-medium text-foreground">${calculation.costUSD.toLocaleString()} USD</p>
+                    <p className="font-medium text-foreground">
+                      ${calculation.costUSD.toLocaleString()} USD
+                    </p>
                   </div>
                   <div className="text-left">
                     <p className="text-muted-foreground">ROI</p>
-                    <p className="font-medium text-foreground">{calculation.roiYears} años</p>
+                    <p className="font-medium text-foreground">
+                      {calculation.roiYears} años
+                    </p>
                   </div>
                 </div>
               </div>
@@ -101,7 +117,8 @@ export function StepCTA({ formData, calculation }: StepCTAProps) {
               </a>
 
               <p className="text-xs text-muted-foreground text-center">
-                Al hacer clic, se abrirá WhatsApp con un mensaje preformateado con todos los datos de tu cotización.
+                Al hacer clic, se abrirá WhatsApp con un mensaje preformateado
+                con todos los datos de tu cotización.
               </p>
             </div>
           </CardContent>
@@ -149,5 +166,5 @@ export function StepCTA({ formData, calculation }: StepCTAProps) {
         </div>
       </motion.div>
     </motion.div>
-  )
+  );
 }

@@ -3,11 +3,12 @@
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { WizardStep } from '../types';
 
 interface ProgressStepsProps {
-  currentStep: number
-  totalSteps: number
-  steps: { label: string; shortLabel: string }[]
+  steps: WizardStep[];
+  currentStep: number;
+  totalSteps: number;
 }
 
 export function ProgressSteps({ currentStep, totalSteps, steps }: ProgressStepsProps) {

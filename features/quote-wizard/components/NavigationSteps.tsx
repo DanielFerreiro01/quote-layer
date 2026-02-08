@@ -6,18 +6,19 @@ interface WizardNavigationProps {
   isLast: boolean;
   onNext: () => void;
   onBack: () => void;
-  nextLabel?: string;
   disabled?: boolean;
 }
 
-export default function WizardNavigation({
+export default function NavigationSteps({
   isFirst,
   isLast,
   onNext,
   onBack,
-  nextLabel = "Siguiente",
   disabled = false,
 }: WizardNavigationProps) {
+  
+  const nextLabel = isLast ? "Ver cotización" : "Siguiente"
+  
   return (
     <div className="mt-8 flex items-center justify-between pt-6 border-t border-border">
       <Button
