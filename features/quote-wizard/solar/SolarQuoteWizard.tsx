@@ -1,61 +1,95 @@
 "use client";
 
-import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useWizardNavigation } from "../core/hooks/useWizardNavigation";
+import { useWizardValidation } from "../core/hooks/useWizardValidation";
+import { useSolarQuoteForm } from "./hooks/useSolarQuoteForm";
+import { useSolarCalculation } from "./hooks/useSolarCalculation";
+import { SOLAR_WIZARD_CONFIG } from "./config/wizard.config";
+import { Wizard } from "../components/Wizard";
+import { StepConsumption, StepContact, StepCTA, StepInstallation, StepResults } from "./steps";
 
-import { Wizard } from "@/features/quote-wizard/components/Wizard";
-import { createSolarSteps } from "./steps/steps";
-import { useSolarQuote } from "@/features/quote-wizard/hooks/solar/useSolarQuote";
-import { calculateSolarQuote } from "@/app/actions/solar/calculate-solar-quote";
-import { SolarCalculation } from "@/lib/solar/solar-types";
+
+const STEP_COMPONENTS = {
+  StepContact,
+  StepConsumption,
+  StepInstallation,
+  StepResults,
+  StepCTA,
+};
 
 export default function SolarQuoteWizard() {
-  const wizard = useSolarQuote(5);
   const { tenant } = useParams<{ tenant: string }>();
+  
+  // ✅ Hooks separados por responsabilidad
+  const navigation = useWizardNavigation(SOLAR_WIZARD_CONFIG.totalSteps);
+  const { formData, updateContact, updateConsumption, updateInstallation } = useSolarQuoteForm();
+  const { errors, validateStep } = useWizardValidation(SOLAR_WIZARD_CONFIG.validation);
+  const calculation = useSolarCalculation(tenant);
 
-  const [calculation, setCalculation] =
-    useState<SolarCalculation | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-
+  // ✅ Handler limpio
   const handleNext = async () => {
-    const isValid = wizard.validateCurrentStep();
-    if (!isValid) return;
-
-    if (wizard.currentStep === 3 && !calculation) {
-      setIsCalculating(true);
-      try {
-        const result = await calculateSolarQuote(
-          tenant,
-          wizard.formData
-        );
-        setCalculation(result);
-      } finally {
-        setIsCalculating(false);
-      }
+    const currentStepConfig = SOLAR_WIZARD_CONFIG.steps[navigation.currentStep - 1];
+    
+    // Validar step actual
+    if (!currentStepConfig.skipValidation) {
+      const isValid = validateStep(navigation.currentStep, getStepData(navigation.currentStep));
+      if (!isValid) return;
     }
 
-    wizard.next();
+    // Calcular cotización en step 3
+    if (navigation.currentStep === 3 && !calculation.data) {
+      calculation.mutate(formData);
+    }
+
+    navigation.next();
   };
 
-  const steps = createSolarSteps({
-    formData: wizard.formData,
-    errors: wizard.errors,
-    calculation,
-    isCalculating,
-    updateContact: wizard.updateContact,
-    updateConsumption: wizard.updateConsumption,
-    updateInstallation: wizard.updateInstallation,
+  const getStepData = (step: number) => {
+    switch (step) {
+      case 1: return formData.contact;
+      case 2: return formData.consumption;
+      case 3: return formData.installation;
+      default: return {};
+    }
+  };
+
+  // ✅ Renderizar steps dinámicamente
+  const steps = SOLAR_WIZARD_CONFIG.steps.map((config) => {
+    const StepComponent = STEP_COMPONENTS[config.component as keyof typeof STEP_COMPONENTS];
+    
+    return {
+      id: config.id,
+      label: config.label,
+      shortLabel: config.shortLabel,
+      render: () => {
+        switch (config.id) {
+          case 'contact':
+            return <StepContact data={formData.contact} onChange={updateContact} errors={errors} />;
+          case 'consumption':
+            return <StepConsumption data={formData.consumption} onChange={updateConsumption} />;
+          case 'installation':
+            return <StepInstallation data={formData.installation} onChange={updateInstallation} />;
+          case 'results':
+            return calculation.data ? <StepResults calculation={calculation.data} /> : null;
+          case 'cta':
+            return calculation.data ? <StepCTA formData={formData} calculation={calculation.data} /> : null;
+          default:
+            return null;
+        }
+      },
+    };
   });
 
   return (
     <Wizard
       steps={steps}
-      currentStep={wizard.currentStep}
-      isFirst={wizard.isFirst}
-      isLast={wizard.isLast}
+      currentStep={navigation.currentStep}
+      isFirst={navigation.isFirst}
+      isLast={navigation.isLast}
       onNext={handleNext}
-      onBack={wizard.back}
-      disabled={isCalculating}
+      onBack={navigation.back}
+      disabled={calculation.isPending}
     />
   );
 }
