@@ -131,7 +131,8 @@ export interface ClientConfig {
 export interface SolarSystemConfig {
   panelPower: number;           // Watts por panel
   panelEfficiency: number;      // %
-  systemLosses: number;         // %
+  systemLosses: number;         // % (antes systemEfficiency)
+  systemEfficiency: number;     // % eficiencia total del sistema
   degradationRate: number;      // % anual
   peakSunHours: {
     day: number;

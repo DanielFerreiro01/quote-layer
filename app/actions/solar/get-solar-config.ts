@@ -1,41 +1,93 @@
-'use server'
+// ✅ app/actions/solar/get-solar-config.ts
+"use server";
 
-import { cache } from 'react'
-import { prisma } from '@/lib/prisma'
-import { QuoteType } from '@prisma/client'
-import { SolarRuntimeConfigSchema } from '@/lib/solar/solar-config.schema'
+import { prisma } from "@/lib/prisma";
+import type { SolarConfig } from "@/lib/solar/solar-types";
+import { QuoteType } from "@prisma/client"; // ✅ Import correcto
 
-async function _getSolarConfig(providerSlug: string) {
-  const config = await prisma.quoteConfig.findFirst({
-    where: {
-      type: QuoteType.SOLAR,
-      isActive: true,
-      provider: { slug: providerSlug },
-    },
+export async function getSolarConfig(providerSlug: string): Promise<SolarConfig> {
+  const provider = await prisma.provider.findUnique({
+    where: { slug: providerSlug },
     include: {
-      solarConfig: true,
+      quoteConfigs: {
+        where: { type: QuoteType.SOLAR, isActive: true },
+        include: {
+          solarConfig: true,
+        },
+      },
     },
-  })
+  });
 
-  if (!config?.solarConfig) {
-    throw new Error('Solar config not found')
+  if (!provider) {
+    throw new Error(`Provider '${providerSlug}' no encontrado`);
   }
 
-  return SolarRuntimeConfigSchema.parse({
-    baseCostPerKw: config.solarConfig.baseCostPerKw,
-    electricityCostPerKwh: config.solarConfig.electricityCostPerKwh,
-    annualElectricityIncrease: config.solarConfig.annualElectricityIncrease,
+  const quoteConfig = provider.quoteConfigs[0];
+  if (!quoteConfig?.solarConfig) {
+    throw new Error(`Configuración solar no encontrada para '${providerSlug}'`);
+  }
 
-    panelWattCapacity: config.solarConfig.panelWattCapacity,
-    sunHoursPerDay: config.solarConfig.sunHoursPerDay,
-    systemEfficiency: config.solarConfig.systemEfficiency,
+  const dbConfig = quoteConfig.solarConfig;
 
-    clientTypeMultiplier: config.solarConfig.clientTypeMultiplier,
-    mountingTypeMultiplier: config.solarConfig.mountingTypeMultiplier,
-
-    maintenanceAnnualRate: config.solarConfig.maintenanceAnnualRate,
-    projectionYears: config.solarConfig.projectionYears,
-  })
+  return {
+    clients: {
+      residential: {
+        tariff: {
+          energyCost: dbConfig.residentialEnergyCost,
+          fixedCharge: dbConfig.residentialFixedCharge,
+        },
+        taxRate: dbConfig.residentialTaxRate,
+        inflationRate: dbConfig.residentialInflationRate,
+      },
+      industrial: {
+        tariff: {
+          energyCost: dbConfig.industrialEnergyCost,
+          fixedCharge: dbConfig.industrialFixedCharge,
+          demandCharge: dbConfig.industrialDemandCharge ?? undefined,
+        },
+        taxRate: dbConfig.industrialTaxRate,
+        inflationRate: dbConfig.industrialInflationRate,
+      },
+      agro: {
+        tariff: {
+          energyCost: dbConfig.agroEnergyCost,
+          fixedCharge: dbConfig.agroFixedCharge,
+        },
+        taxRate: dbConfig.agroTaxRate,
+        inflationRate: dbConfig.agroInflationRate,
+      },
+    },
+    system: {
+      panelPower: dbConfig.panelPower,
+      panelEfficiency: dbConfig.panelEfficiency,
+      systemLosses: dbConfig.systemLosses,
+      systemEfficiency: 100 - dbConfig.systemLosses, // ✅ Calcular de systemLosses
+      degradationRate: dbConfig.degradationRate,
+      peakSunHours: {
+        day: dbConfig.peakSunHoursDay,
+        night: dbConfig.peakSunHoursNight,
+        mixed: dbConfig.peakSunHoursMixed,
+      },
+    },
+    costs: {
+      panelCost: dbConfig.panelCost,
+      inverterCost: dbConfig.inverterCost,
+      inverterCostPerKw: dbConfig.inverterCostPerKw,
+      installationCostPerKw: dbConfig.installationCostPerKw,
+      structureCostPerKw: dbConfig.structureCostPerKw,
+      marginPercentage: dbConfig.marginPercentage,
+      mountingCosts: {
+        'roof-sheet': dbConfig.mountingCostRoofSheet,
+        'roof-tile': dbConfig.mountingCostRoofTile,
+        'ground': dbConfig.mountingCostGround,
+        'carport': dbConfig.mountingCostCarport,
+      },
+    },
+    financing: {
+      enabled: dbConfig.financingEnabled,
+      downPaymentPercentage: dbConfig.downPaymentPercentage,
+      interestRate: dbConfig.interestRate,
+      termMonths: dbConfig.termMonths,
+    },
+  };
 }
-
-export const getSolarConfig = cache(_getSolarConfig)

@@ -1,135 +1,195 @@
+// ✅ lib/solar/calculate-solar-system.ts (REEMPLAZAR COMPLETO)
 import type {
   FormData,
   SolarCalculation,
   ClientType,
   MountingType,
-} from './solar-types'
+  SolarConfig,
+} from './solar-types';
 
-const CLIENT_TYPE_MULTIPLIER: Record<ClientType, number> = {
-  residential: 1,
-  industrial: 0.85,
-  agro: 0.9,
-}
-
-const MOUNTING_TYPE_COST_MULTIPLIER: Record<MountingType, number> = {
-  'roof-sheet': 1,
-  'roof-tile': 1.15,
-  ground: 1.25,
-  carport: 1.4,
-}
-
-const BASE_COST_PER_KW = 1200
-const ELECTRICITY_COST_PER_KWH = 0.15
-const ANNUAL_ELECTRICITY_INCREASE = 0.04
-const PANEL_WATT_CAPACITY = 550
-const SUN_HOURS_PER_DAY = 5
-const SYSTEM_EFFICIENCY = 0.85
-
-export function calculateSolarSystem(data: FormData): SolarCalculation {
-  const { consumption, installation, contact } = data
-
-  const annualConsumption = consumption.monthlyKwh * 12
-
-  const dailyProduction =
-    (annualConsumption / 365) * (1 / SYSTEM_EFFICIENCY)
-
-  const systemSizeKw = dailyProduction / SUN_HOURS_PER_DAY
-
-  const panelCount = Math.ceil((systemSizeKw * 1000) / PANEL_WATT_CAPACITY)
-
-  const actualSystemSize = (panelCount * PANEL_WATT_CAPACITY) / 1000
-
-  const mountingMultiplier =
-    MOUNTING_TYPE_COST_MULTIPLIER[installation.mountingType]
-  const clientMultiplier = CLIENT_TYPE_MULTIPLIER[contact.clientType]
-
-  const costUSD =
-    actualSystemSize * BASE_COST_PER_KW * mountingMultiplier * clientMultiplier
-
-  const monthlySavings = consumption.monthlyKwh * ELECTRICITY_COST_PER_KWH
-  const annualSavings = monthlySavings * 12
-
-  const roiYears = costUSD / annualSavings
-
-  const gridCostProjection: number[] = []
-  const solarCostProjection: number[] = []
-
-  let cumulativeGridCost = 0
-  let cumulativeSolarCost = costUSD
-
-  for (let year = 0; year <= 20; year++) {
-    const electricityCostThisYear =
-      annualConsumption *
-      ELECTRICITY_COST_PER_KWH *
-      (1 + ANNUAL_ELECTRICITY_INCREASE) ** year
-
-    cumulativeGridCost += electricityCostThisYear
-    gridCostProjection.push(Math.round(cumulativeGridCost))
-
-    if (year > 0) {
-      cumulativeSolarCost += annualSavings * 0.05
-    }
-    solarCostProjection.push(Math.round(cumulativeSolarCost))
-  }
-
-  return {
-    systemSizeKw: Math.round(actualSystemSize * 100) / 100,
-    panelCount,
-    costUSD: Math.round(costUSD),
-    monthlySavings: Math.round(monthlySavings),
-    annualSavings: Math.round(annualSavings),
-    roiYears: Math.round(roiYears * 10) / 10,
-    gridCostProjection,
-    solarCostProjection,
-  }
-}
-
-export function generateWhatsAppMessage(
+export function calculateSolarSystem(
   data: FormData,
-  calculation: SolarCalculation,
-): string {
-  const clientTypeLabels: Record<ClientType, string> = {
-    residential: 'Residencial',
-    industrial: 'Industrial',
-    agro: 'Agroindustrial',
+  config: SolarConfig, // ✅ Ahora recibe config
+): SolarCalculation {
+  const { consumption, installation, contact } = data;
+  const clientConfig = config.clients[contact.clientType];
+  const systemConfig = config.system;
+  const costConfig = config.costs;
+
+  // ========================================
+  // CÁLCULOS DEL SISTEMA
+  // ========================================
+  
+  const annualConsumption = consumption.monthlyKwh * 12;
+  
+  // Horas sol según perfil de consumo
+  const peakSunHours = systemConfig.peakSunHours[consumption.timeProfile];
+  
+  // Producción diaria necesaria (considerando pérdidas del sistema)
+  const dailyProductionNeeded = annualConsumption / 365;
+  
+  // Tamaño del sistema en kW
+  const systemSizeKw = dailyProductionNeeded / (peakSunHours * (systemConfig.panelEfficiency / 100));
+  
+  // Cantidad de paneles
+  const panelCount = Math.ceil((systemSizeKw * 1000) / systemConfig.panelPower);
+  
+  // Tamaño real del sistema (basado en paneles completos)
+  const actualSystemSizeKw = (panelCount * systemConfig.panelPower) / 1000;
+  
+  // Producción anual real
+  const annualProduction = actualSystemSizeKw * peakSunHours * 365 * (systemConfig.panelEfficiency / 100);
+  
+  // Potencia del inversor (típicamente 80-90% del sistema)
+  const inverterPower = actualSystemSizeKw * 0.85;
+  
+  // Porcentaje de cobertura
+  const coveragePercentage = Math.min((annualProduction / annualConsumption) * 100, 100);
+
+  // ========================================
+  // CÁLCULOS DE COSTOS
+  // ========================================
+  
+  const panelsCost = panelCount * costConfig.panelCost;
+  const inverterCost = costConfig.inverterCost + (inverterPower * costConfig.inverterCostPerKw);
+  const installationCost = actualSystemSizeKw * costConfig.installationCostPerKw;
+  const structureCost = actualSystemSizeKw * costConfig.structureCostPerKw;
+  const mountingCost = actualSystemSizeKw * costConfig.mountingCosts[installation.mountingType];
+  
+  const subtotal = panelsCost + inverterCost + installationCost + structureCost + mountingCost;
+  const margin = subtotal * (costConfig.marginPercentage / 100);
+  const totalCost = subtotal + margin;
+
+  // ========================================
+  // FINANCIAMIENTO (si está habilitado)
+  // ========================================
+  
+  let financingOptions;
+  
+  if (config.financing.enabled) {
+    const downPayment = totalCost * (config.financing.downPaymentPercentage / 100);
+    const loanAmount = totalCost - downPayment;
+    const monthlyRate = config.financing.interestRate / 100 / 12;
+    const termMonths = config.financing.termMonths;
+    
+    // Fórmula de pago mensual: P * [r(1+r)^n] / [(1+r)^n - 1]
+    const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / 
+                          (Math.pow(1 + monthlyRate, termMonths) - 1);
+    const totalPayments = monthlyPayment * termMonths;
+    const totalInterest = totalPayments - loanAmount;
+    
+    financingOptions = {
+      enabled: true,
+      downPayment: Math.round(downPayment),
+      loanAmount: Math.round(loanAmount),
+      monthlyPayment: Math.round(monthlyPayment),
+      totalPayments: Math.round(totalPayments),
+      totalInterest: Math.round(totalInterest),
+    };
+  } else {
+    financingOptions = {
+      enabled: false,
+      downPayment: 0,
+      loanAmount: 0,
+      monthlyPayment: 0,
+      totalPayments: 0,
+      totalInterest: 0,
+    };
   }
 
-  const mountingTypeLabels: Record<MountingType, string> = {
-    'roof-sheet': 'Techo (Chapa)',
-    'roof-tile': 'Techo (Teja)',
-    ground: 'Suelo',
-    carport: 'Carport',
+  // ========================================
+  // ANÁLISIS ECONÓMICO
+  // ========================================
+  
+  const energyCost = clientConfig.tariff.energyCost;
+  const fixedCharge = clientConfig.tariff.fixedCharge;
+  const taxRate = clientConfig.taxRate / 100;
+  const inflationRate = clientConfig.inflationRate / 100;
+  
+  // Factura mensual sin solar (consumo completo)
+  const monthlyEnergyWithoutSolar = (consumption.monthlyKwh * energyCost) + fixedCharge;
+  const monthlyBillWithoutSolar = monthlyEnergyWithoutSolar * (1 + taxRate);
+  
+  // Factura mensual con solar (solo cargo fijo y consumo residual)
+  const residualConsumption = consumption.monthlyKwh * (1 - coveragePercentage / 100);
+  const monthlyEnergyWithSolar = (residualConsumption * energyCost) + fixedCharge;
+  const monthlyBillWithSolar = monthlyEnergyWithSolar * (1 + taxRate);
+  
+  const monthlySavings = monthlyBillWithoutSolar - monthlyBillWithSolar;
+  const annualSavings = monthlySavings * 12;
+  
+  // Payback period (años para recuperar inversión)
+  const paybackYears = totalCost / annualSavings;
+  
+  // Proyección a 25 años
+  const projection = [];
+  let cumulativeSavings = 0;
+  
+  for (let year = 1; year <= 25; year++) {
+    // Degradación de paneles
+    const systemDegradation = Math.pow(1 - systemConfig.degradationRate / 100, year);
+    const adjustedProduction = annualProduction * systemDegradation;
+    const adjustedCoverage = Math.min((adjustedProduction / annualConsumption) * 100, 100);
+    
+    // Costo de electricidad con inflación
+    const yearlyInflation = Math.pow(1 + inflationRate, year);
+    const energyCostThisYear = energyCost * yearlyInflation;
+    
+    // Facturas proyectadas
+    const yearlyBillWithoutSolar = (annualConsumption * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
+    const residualConsumptionThisYear = annualConsumption * (1 - adjustedCoverage / 100);
+    const yearlyBillWithSolar = (residualConsumptionThisYear * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
+    
+    const savingsThisYear = yearlyBillWithoutSolar - yearlyBillWithSolar;
+    cumulativeSavings += savingsThisYear;
+    
+    projection.push({
+      year,
+      billWithoutSolar: Math.round(yearlyBillWithoutSolar),
+      billWithSolar: Math.round(yearlyBillWithSolar),
+      savings: Math.round(savingsThisYear),
+      cumulativeSavings: Math.round(cumulativeSavings),
+    });
   }
+  
+  // ROI a 25 años
+  const roi25Years = ((cumulativeSavings - totalCost) / totalCost) * 100;
 
-  const timeProfileLabels = {
-    day: 'Diurno',
-    night: 'Nocturno',
-    mixed: 'Mixto',
-  }
-
-  const message = `*Cotización Solar - SolarQuote Pro*
-
-*Datos de Contacto*
-Nombre: ${data.contact.name}
-Email: ${data.contact.email}
-Teléfono: ${data.contact.phone}
-Tipo de Cliente: ${clientTypeLabels[data.contact.clientType]}
-
-*Consumo Energético*
-Consumo Mensual: ${data.consumption.monthlyKwh} kWh
-Perfil Horario: ${timeProfileLabels[data.consumption.timeProfile]}
-
-*Instalación*
-Tipo de Montaje: ${mountingTypeLabels[data.installation.mountingType]}
-
-*Resultado de Cotización*
-Tamaño del Sistema: ${calculation.systemSizeKw} kW
-Cantidad de Paneles: ${calculation.panelCount}
-Costo Estimado: $${calculation.costUSD.toLocaleString()} USD
-Ahorro Mensual: $${calculation.monthlySavings} USD
-ROI Estimado: ${calculation.roiYears} años
-
-Me interesa recibir más información sobre esta cotización.`
-
-  return encodeURIComponent(message)
+  // ========================================
+  // RESULTADO FINAL
+  // ========================================
+  
+  return {
+    system: {
+      power: Math.round(actualSystemSizeKw * 100) / 100,
+      panels: panelCount,
+      inverterPower: Math.round(inverterPower * 100) / 100,
+      annualProduction: Math.round(annualProduction),
+      coveragePercentage: Math.round(coveragePercentage * 10) / 10,
+      mountingType: installation.mountingType,
+    },
+    costs: {
+      panels: Math.round(panelsCost),
+      inverter: Math.round(inverterCost),
+      installation: Math.round(installationCost),
+      structure: Math.round(structureCost),
+      mounting: Math.round(mountingCost),
+      subtotal: Math.round(subtotal),
+      margin: Math.round(margin),
+      total: Math.round(totalCost),
+    },
+    financing: financingOptions,
+    economics: {
+      monthlyBillWithoutSolar: Math.round(monthlyBillWithoutSolar),
+      monthlyBillWithSolar: Math.round(monthlyBillWithSolar),
+      monthlySavings: Math.round(monthlySavings),
+      annualSavings: Math.round(annualSavings),
+      paybackYears: Math.round(paybackYears * 10) / 10,
+      roi25Years: Math.round(roi25Years * 10) / 10,
+      projection,
+    },
+    calculatedAt: new Date(),
+    config,
+    input: data,
+  };
 }

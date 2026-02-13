@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { FormData, SolarCalculation } from "@/lib/solar/solar-types";
-import { generateWhatsAppMessage } from "@/lib/solar/solar-calculations";
+import { generateWhatsAppMessage } from "@/lib/solar/whatsapp-message";
+
 
 
 interface StepCTAProps {
@@ -68,33 +69,33 @@ export function StepCTA({ formData, calculation }: StepCTAProps) {
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-6">
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4 w-full">
                 <h3 className="text-lg font-semibold text-foreground">
                   Resumen de tu cotización
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="text-left">
+                  <div className="text-left border-b border-border/50 pb-2">
                     <p className="text-muted-foreground">Sistema</p>
                     <p className="font-medium text-foreground">
-                      {calculation.systemSizeKw} kW
+                      {calculation.system.power} kWp
                     </p>
                   </div>
-                  <div className="text-left">
+                  <div className="text-left border-b border-border/50 pb-2">
                     <p className="text-muted-foreground">Paneles</p>
                     <p className="font-medium text-foreground">
-                      {calculation.panelCount} unidades
+                      {calculation.system.panels} unidades
                     </p>
                   </div>
                   <div className="text-left">
-                    <p className="text-muted-foreground">Inversión</p>
+                    <p className="text-muted-foreground">Inversión Total</p>
                     <p className="font-medium text-foreground">
-                      ${calculation.costUSD.toLocaleString()} USD
+                      ${calculation.costs.total.toLocaleString()} USD
                     </p>
                   </div>
                   <div className="text-left">
-                    <p className="text-muted-foreground">ROI</p>
+                    <p className="text-muted-foreground">Retorno (Payback)</p>
                     <p className="font-medium text-foreground">
-                      {calculation.roiYears} años
+                      {calculation.economics.paybackYears} años
                     </p>
                   </div>
                 </div>

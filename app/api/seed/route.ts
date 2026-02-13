@@ -1,13 +1,10 @@
+// ✅ app/api/seed/route.ts (VERIFICAR)
 import { NextResponse } from 'next/server'
-import { QuoteType } from '@/lib/generated/prisma/enums'
-import { prisma } from "@/lib/prisma";
-
+import { QuoteType } from '@prisma/client' // ✅ Cambiar import
+import { prisma } from "@/lib/prisma"
 
 export async function POST() {
   try {
-    /**
-     * 1️⃣ Provider demo
-     */
     const provider = await prisma.provider.upsert({
       where: { slug: 'solar-demo' },
       update: {},
@@ -17,14 +14,11 @@ export async function POST() {
       },
     })
 
-    /**
-     * 2️⃣ QuoteConfig SOLAR
-     */
     const solarQuoteConfig = await prisma.quoteConfig.upsert({
       where: {
         providerId_type: {
           providerId: provider.id,
-          type: QuoteType.SOLAR,
+          type: QuoteType.SOLAR, // ✅ Esto ahora debería funcionar
         },
       },
       update: {},
@@ -35,9 +29,6 @@ export async function POST() {
       },
     })
 
-    /**
-     * 3️⃣ SolarConfig (tu seed real)
-     */
     await prisma.solarConfig.upsert({
       where: {
         quoteConfigId: solarQuoteConfig.id,
@@ -45,30 +36,54 @@ export async function POST() {
       update: {},
       create: {
         quoteConfigId: solarQuoteConfig.id,
-
-        baseCostPerKw: 1200,
-        electricityCostPerKwh: 0.15,
-        annualElectricityIncrease: 0.04,
-
-        panelWattCapacity: 550,
-        sunHoursPerDay: 5,
-        systemEfficiency: 0.85,
-
-        clientTypeMultiplier: {
-          residential: 1,
-          industrial: 0.85,
-          agro: 0.9,
-        },
-
-        mountingTypeMultiplier: {
-          'roof-sheet': 1,
-          'roof-tile': 1.15,
-          ground: 1.25,
-          carport: 1.4,
-        },
-
-        maintenanceAnnualRate: 0.05,
-        projectionYears: 20,
+        
+        // Residencial
+        residentialEnergyCost: 0.15,
+        residentialFixedCharge: 10,
+        residentialTaxRate: 21,
+        residentialInflationRate: 4,
+        
+        // Industrial
+        industrialEnergyCost: 0.12,
+        industrialFixedCharge: 50,
+        industrialDemandCharge: 15,
+        industrialTaxRate: 21,
+        industrialInflationRate: 4,
+        
+        // Agro
+        agroEnergyCost: 0.13,
+        agroFixedCharge: 30,
+        agroTaxRate: 10.5,
+        agroInflationRate: 4,
+        
+        // Sistema
+        panelPower: 550,
+        panelEfficiency: 21,
+        systemLosses: 15,
+        degradationRate: 0.5,
+        
+        peakSunHoursDay: 6,
+        peakSunHoursNight: 0,
+        peakSunHoursMixed: 5,
+        
+        // Costos
+        panelCost: 200,
+        inverterCost: 500,
+        inverterCostPerKw: 300,
+        installationCostPerKw: 150,
+        structureCostPerKw: 100,
+        marginPercentage: 20,
+        
+        mountingCostRoofSheet: 50,
+        mountingCostRoofTile: 80,
+        mountingCostGround: 120,
+        mountingCostCarport: 150,
+        
+        // Financiamiento
+        financingEnabled: true,
+        downPaymentPercentage: 20,
+        interestRate: 8,
+        termMonths: 60,
       },
     })
 

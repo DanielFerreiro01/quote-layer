@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ✅ prisma/schema.prisma - VERIFICAR que tengas EXACTAMENTE esto
 
 generator client {
   provider = "prisma-client-js"
@@ -10,23 +6,19 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-}
-
-enum QuoteType {
-  SOLAR
-  GYM
+  url      = env("DATABASE_URL")
 }
 
 model Provider {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  email     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  email        String?
+  quoteConfigs QuoteConfig[] // ✅ DEBE ESTAR AQUÍ
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  configs QuoteConfig[]
-  quotes  Quote[]
+  @@map("providers")
 }
 
 model QuoteConfig {
@@ -35,50 +27,76 @@ model QuoteConfig {
   type       QuoteType
   isActive   Boolean   @default(true)
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  provider    Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  solarConfig SolarConfig? // ✅ DEBE ESTAR AQUÍ
 
-  provider   Provider  @relation(fields: [providerId], references: [id])
-
-  solarConfig SolarConfig?
-
-  quotes Quote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([providerId, type])
+  @@map("quote_configs")
 }
 
 model SolarConfig {
-  id            String @id @default(uuid())
-  quoteConfigId String @unique
+  id            String      @id @default(uuid())
+  quoteConfigId String      @unique
+  quoteConfig   QuoteConfig @relation(fields: [quoteConfigId], references: [id], onDelete: Cascade)
 
-  baseCostPerKw             Float
-  electricityCostPerKwh     Float
-  annualElectricityIncrease Float
+  // Residencial
+  residentialEnergyCost    Float @default(0.15)
+  residentialFixedCharge   Float @default(10)
+  residentialTaxRate       Float @default(21)
+  residentialInflationRate Float @default(4)
 
-  panelWattCapacity Int
-  sunHoursPerDay    Float
-  systemEfficiency Float
+  // Industrial
+  industrialEnergyCost    Float  @default(0.12)
+  industrialFixedCharge   Float  @default(50)
+  industrialDemandCharge  Float? @default(15)
+  industrialTaxRate       Float  @default(21)
+  industrialInflationRate Float  @default(4)
 
-  clientTypeMultiplier   Json
-  mountingTypeMultiplier Json
+  // Agro
+  agroEnergyCost    Float @default(0.13)
+  agroFixedCharge   Float @default(30)
+  agroTaxRate       Float @default(10.5)
+  agroInflationRate Float @default(4)
 
-  maintenanceAnnualRate Float
-  projectionYears       Int
+  // Sistema
+  panelPower      Int   @default(550)
+  panelEfficiency Float @default(21)
+  systemLosses    Float @default(15)
+  degradationRate Float @default(0.5)
 
-  quoteConfig QuoteConfig @relation(fields: [quoteConfigId], references: [id])
-}
+  peakSunHoursDay   Float @default(6)
+  peakSunHoursNight Float @default(0)
+  peakSunHoursMixed Float @default(5)
 
-model Quote {
-  id            String   @id @default(uuid())
-  providerId    String
-  quoteConfigId String
-  type          QuoteType
+  // Costos
+  panelCost             Float @default(200)
+  inverterCost          Float @default(500)
+  inverterCostPerKw     Float @default(300)
+  installationCostPerKw Float @default(150)
+  structureCostPerKw    Float @default(100)
+  marginPercentage      Float @default(20)
 
-  input   Json
-  result  Json
+  mountingCostRoofSheet Float @default(50)
+  mountingCostRoofTile  Float @default(80)
+  mountingCostGround    Float @default(120)
+  mountingCostCarport   Float @default(150)
+
+  // Financiamiento
+  financingEnabled      Boolean @default(true)
+  downPaymentPercentage Float   @default(20)
+  interestRate          Float   @default(8)
+  termMonths            Int     @default(60)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  provider    Provider    @relation(fields: [providerId], references: [id])
-  quoteConfig QuoteConfig @relation(fields: [quoteConfigId], references: [id])
+  @@map("solar_configs")
+}
+
+enum QuoteType {
+  SOLAR
+  GYM
 }

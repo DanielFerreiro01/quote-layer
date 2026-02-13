@@ -1,3 +1,4 @@
+// ✅ features/quote-wizard/solar/steps/step-results.tsx (REEMPLAZAR COMPLETO)
 "use client";
 
 import { motion } from "framer-motion";
@@ -15,6 +16,7 @@ import {
   Calendar,
   Zap,
   LayoutGrid,
+  Percent,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -29,56 +31,60 @@ interface StepResultsProps {
 }
 
 export function StepResults({ calculation }: StepResultsProps) {
-  const chartData = calculation.gridCostProjection.map((gridCost, index) => ({
-    year: index,
-    "Red Eléctrica": gridCost,
-    "Sistema Solar": calculation.solarCostProjection[index],
+  // ✅ Mapear datos de la proyección al formato del gráfico
+  const chartData = calculation.economics.projection.map((item) => ({
+    year: item.year,
+    "Red Eléctrica": item.billWithoutSolar,
+    "Sistema Solar": item.billWithSolar + (item.year === 1 ? calculation.costs.total : 0),
   }));
 
-  const totalSavings =
-    calculation.gridCostProjection[20] - calculation.solarCostProjection[20];
+  // ✅ Ahorro total a 25 años
+  const totalSavings25Years = 
+    calculation.economics.projection[24]?.cumulativeSavings || 0;
+  
+  const netSavings = totalSavings25Years - calculation.costs.total;
 
   const stats = [
     {
       label: "Inversión Total",
-      value: `$${calculation.costUSD.toLocaleString()}`,
+      value: `$${calculation.costs.total.toLocaleString()}`,
       sublabel: "USD",
       icon: <DollarSign className="h-5 w-5" />,
       color: "text-primary",
     },
     {
       label: "Ahorro Mensual",
-      value: `$${calculation.monthlySavings}`,
+      value: `$${calculation.economics.monthlySavings.toLocaleString()}`,
       sublabel: "USD/mes",
       icon: <TrendingUp className="h-5 w-5" />,
       color: "text-success",
     },
     {
       label: "Retorno de Inversión",
-      value: `${calculation.roiYears}`,
+      value: `${calculation.economics.paybackYears}`,
       sublabel: "años",
       icon: <Calendar className="h-5 w-5" />,
       color: "text-primary",
     },
     {
       label: "Potencia del Sistema",
-      value: `${calculation.systemSizeKw}`,
+      value: `${calculation.system.power}`,
       sublabel: "kW",
       icon: <Zap className="h-5 w-5" />,
       color: "text-warning",
     },
     {
       label: "Paneles Solares",
-      value: `${calculation.panelCount}`,
+      value: `${calculation.system.panels}`,
       sublabel: "unidades",
       icon: <LayoutGrid className="h-5 w-5" />,
       color: "text-primary",
     },
     {
-      label: "Ahorro a 20 años",
-      value: `$${totalSavings.toLocaleString()}`,
-      sublabel: "USD",
-      icon: <TrendingUp className="h-5 w-5" />,
+      label: "Cobertura",
+      value: `${calculation.system.coveragePercentage}%`,
+      sublabel: "de tu consumo",
+      icon: <Percent className="h-5 w-5" />,
       color: "text-success",
     },
   ];
@@ -103,6 +109,7 @@ export function StepResults({ calculation }: StepResultsProps) {
         </p>
       </div>
 
+      {/* ✅ Grid de estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {stats.map((stat, index) => (
           <motion.div
@@ -133,6 +140,7 @@ export function StepResults({ calculation }: StepResultsProps) {
         ))}
       </div>
 
+      {/* ✅ Gráfico de proyección */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -141,7 +149,7 @@ export function StepResults({ calculation }: StepResultsProps) {
         <Card className="border-border bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">
-              Proyección de costos a 20 años
+              Proyección de costos a 25 años
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Comparación entre continuar con la red eléctrica vs. instalar
@@ -280,6 +288,7 @@ export function StepResults({ calculation }: StepResultsProps) {
         </Card>
       </motion.div>
 
+      {/* ✅ Card de ROI */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -290,16 +299,72 @@ export function StepResults({ calculation }: StepResultsProps) {
           <TrendingUp className="h-5 w-5 text-success mt-0.5" />
           <div>
             <p className="font-medium text-foreground">
-              Tu inversión se recupera en {calculation.roiYears} años
+              Tu inversión se recupera en {calculation.economics.paybackYears} años
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Después del período de recuperación, generarás energía
               prácticamente gratis durante los siguientes{" "}
-              {Math.round(25 - calculation.roiYears)} años de vida útil del
+              {Math.round(25 - calculation.economics.paybackYears)} años de vida útil del
               sistema.
+            </p>
+            <p className="text-sm font-semibold text-success mt-2">
+              Ahorro neto a 25 años: ${netSavings.toLocaleString()} USD
             </p>
           </div>
         </div>
+      </motion.div>
+
+      {/* ✅ Desglose de costos (opcional) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="border-border bg-card">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              Desglose de costos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Paneles solares ({calculation.system.panels} unidades)</span>
+              <span className="font-medium">${calculation.costs.panels.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Inversor ({calculation.system.inverterPower} kW)</span>
+              <span className="font-medium">${calculation.costs.inverter.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Instalación</span>
+              <span className="font-medium">${calculation.costs.installation.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Estructura</span>
+              <span className="font-medium">${calculation.costs.structure.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Montaje</span>
+              <span className="font-medium">${calculation.costs.mounting.toLocaleString()}</span>
+            </div>
+            <div className="border-t border-border pt-2 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">${calculation.costs.subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Margen ({((calculation.costs.margin / calculation.costs.subtotal) * 100).toFixed(0)}%)</span>
+                <span className="font-medium">${calculation.costs.margin.toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="border-t border-border pt-2 mt-2">
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span className="text-primary">${calculation.costs.total.toLocaleString()} USD</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     </motion.div>
   );
