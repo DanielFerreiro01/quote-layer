@@ -31,17 +31,26 @@ interface StepResultsProps {
 }
 
 export function StepResults({ calculation }: StepResultsProps) {
-  // ✅ Mapear datos de la proyección al formato del gráfico
-  const chartData = calculation.economics.projection.map((item) => ({
-    year: item.year,
-    "Red Eléctrica": item.billWithoutSolar,
-    "Sistema Solar": item.billWithSolar + (item.year === 1 ? calculation.costs.total : 0),
-  }));
+  // ✅ Mapear datos a Gasto Acumulado para mostrar el Payback Real
+  const chartData = calculation.economics.projection.map((item) => {
+    // El gasto acumulado de la red es la suma de facturas sin solar hasta ese año
+    const accumulatedGrid = item.billWithoutSolar * item.year;
+
+    // El gasto acumulado solar es la Inversión Inicial + las facturas reducidas hasta ese año
+    const accumulatedSolar =
+      calculation.costs.total + item.billWithSolar * item.year;
+
+    return {
+      year: item.year,
+      "Red Eléctrica": Math.round(accumulatedGrid),
+      "Sistema Solar": Math.round(accumulatedSolar),
+    };
+  });
 
   // ✅ Ahorro total a 25 años
-  const totalSavings25Years = 
+  const totalSavings25Years =
     calculation.economics.projection[24]?.cumulativeSavings || 0;
-  
+
   const netSavings = totalSavings25Years - calculation.costs.total;
 
   const stats = [
@@ -299,13 +308,14 @@ export function StepResults({ calculation }: StepResultsProps) {
           <TrendingUp className="h-5 w-5 text-success mt-0.5" />
           <div>
             <p className="font-medium text-foreground">
-              Tu inversión se recupera en {calculation.economics.paybackYears} años
+              Tu inversión se recupera en {calculation.economics.paybackYears}{" "}
+              años
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Después del período de recuperación, generarás energía
               prácticamente gratis durante los siguientes{" "}
-              {Math.round(25 - calculation.economics.paybackYears)} años de vida útil del
-              sistema.
+              {Math.round(25 - calculation.economics.paybackYears)} años de vida
+              útil del sistema.
             </p>
             <p className="text-sm font-semibold text-success mt-2">
               Ahorro neto a 25 años: ${netSavings.toLocaleString()} USD
@@ -328,39 +338,66 @@ export function StepResults({ calculation }: StepResultsProps) {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Paneles solares ({calculation.system.panels} unidades)</span>
-              <span className="font-medium">${calculation.costs.panels.toLocaleString()}</span>
+              <span className="text-muted-foreground">
+                Paneles solares ({calculation.system.panels} unidades)
+              </span>
+              <span className="font-medium">
+                ${calculation.costs.panels.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Inversor ({calculation.system.inverterPower} kW)</span>
-              <span className="font-medium">${calculation.costs.inverter.toLocaleString()}</span>
+              <span className="text-muted-foreground">
+                Inversor ({calculation.system.inverterPower} kW)
+              </span>
+              <span className="font-medium">
+                ${calculation.costs.inverter.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Instalación</span>
-              <span className="font-medium">${calculation.costs.installation.toLocaleString()}</span>
+              <span className="font-medium">
+                ${calculation.costs.installation.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Estructura</span>
-              <span className="font-medium">${calculation.costs.structure.toLocaleString()}</span>
+              <span className="font-medium">
+                ${calculation.costs.structure.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Montaje</span>
-              <span className="font-medium">${calculation.costs.mounting.toLocaleString()}</span>
+              <span className="font-medium">
+                ${calculation.costs.mounting.toLocaleString()}
+              </span>
             </div>
             <div className="border-t border-border pt-2 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">${calculation.costs.subtotal.toLocaleString()}</span>
+                <span className="font-medium">
+                  ${calculation.costs.subtotal.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Margen ({((calculation.costs.margin / calculation.costs.subtotal) * 100).toFixed(0)}%)</span>
-                <span className="font-medium">${calculation.costs.margin.toLocaleString()}</span>
+                <span className="text-muted-foreground">
+                  Margen (
+                  {(
+                    (calculation.costs.margin / calculation.costs.subtotal) *
+                    100
+                  ).toFixed(0)}
+                  %)
+                </span>
+                <span className="font-medium">
+                  ${calculation.costs.margin.toLocaleString()}
+                </span>
               </div>
             </div>
             <div className="border-t border-border pt-2 mt-2">
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span className="text-primary">${calculation.costs.total.toLocaleString()} USD</span>
+                <span className="text-primary">
+                  ${calculation.costs.total.toLocaleString()} USD
+                </span>
               </div>
             </div>
           </CardContent>
