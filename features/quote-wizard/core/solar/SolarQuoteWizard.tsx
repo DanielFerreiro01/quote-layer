@@ -1,12 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useWizardNavigation } from "../core/hooks/useWizardNavigation";
-import { useWizardValidation } from "../core/hooks/useWizardValidation";
+import { useWizardNavigation } from "../hooks/useWizardNavigation";
+import { useWizardValidation } from "../hooks/useWizardValidation";
 import { useSolarQuoteForm } from "./hooks/useSolarQuoteForm";
 import { useSolarCalculation } from "./hooks/useSolarCalculation";
 import { SOLAR_WIZARD_CONFIG } from "./config/wizard.config";
-import { Wizard } from "../components/Wizard";
+import { Wizard } from "../../components/Wizard";
 import {
   StepConsumption,
   StepContact,

@@ -1,7 +1,7 @@
 import React from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/features/dashboard/components/app-sidebar"
-import { DashboardHeader } from "@/features/dashboard/components/dashboard-header"
+import { AppSidebar } from "@/features/dashboard/components/layout/app-sidebar"
+import { DashboardHeader } from "@/features/dashboard/components/layout/dashboard-header"
 
 
 export default function DashboardLayout({
