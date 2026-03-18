@@ -1,5 +1,3 @@
-// ✅ prisma/schema.prisma - VERIFICAR que tengas EXACTAMENTE esto
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,12 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ========================================
+// MODELOS EXISTENTES (Sin cambios)
+// ========================================
+
 model Provider {
   id           String        @id @default(uuid())
   name         String
   slug         String        @unique
   email        String?
-  quoteConfigs QuoteConfig[] // ✅ DEBE ESTAR AQUÍ
+  quoteConfigs QuoteConfig[]
+  quotes       Quote[]       
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -28,7 +31,8 @@ model QuoteConfig {
   isActive   Boolean   @default(true)
 
   provider    Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  solarConfig SolarConfig? // ✅ DEBE ESTAR AQUÍ
+  solarConfig SolarConfig?
+  quotes      Quote[]      
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,26 +46,22 @@ model SolarConfig {
   quoteConfigId String      @unique
   quoteConfig   QuoteConfig @relation(fields: [quoteConfigId], references: [id], onDelete: Cascade)
 
-  // Residencial
   residentialEnergyCost    Float @default(0.15)
   residentialFixedCharge   Float @default(10)
   residentialTaxRate       Float @default(21)
   residentialInflationRate Float @default(4)
 
-  // Industrial
   industrialEnergyCost    Float  @default(0.12)
   industrialFixedCharge   Float  @default(50)
   industrialDemandCharge  Float? @default(15)
   industrialTaxRate       Float  @default(21)
   industrialInflationRate Float  @default(4)
 
-  // Agro
   agroEnergyCost    Float @default(0.13)
   agroFixedCharge   Float @default(30)
   agroTaxRate       Float @default(10.5)
   agroInflationRate Float @default(4)
 
-  // Sistema
   panelPower      Int   @default(550)
   panelEfficiency Float @default(21)
   systemLosses    Float @default(15)
@@ -71,7 +71,6 @@ model SolarConfig {
   peakSunHoursNight Float @default(0)
   peakSunHoursMixed Float @default(5)
 
-  // Costos
   panelCost             Float @default(200)
   inverterCost          Float @default(500)
   inverterCostPerKw     Float @default(300)
@@ -84,7 +83,6 @@ model SolarConfig {
   mountingCostGround    Float @default(120)
   mountingCostCarport   Float @default(150)
 
-  // Financiamiento
   financingEnabled      Boolean @default(true)
   downPaymentPercentage Float   @default(20)
   interestRate          Float   @default(8)
@@ -96,7 +94,81 @@ model SolarConfig {
   @@map("solar_configs")
 }
 
+/**
+ * Modelo Quote: Almacena cada cotización generada
+ */
+
+model Quote {
+  id            String      @id @default(uuid())
+  providerId    String
+  quoteConfigId String
+  type          QuoteType
+  
+  // Datos del cliente (para el dashboard)
+  customerEmail String
+  customerName  String
+  customerPhone String?
+  
+  // Estado de la cotización
+  status        QuoteStatus @default(PENDING)
+  expiresAt     DateTime?   // Fecha de expiración (ej: 30 días)
+  
+  // Input y resultado (JSON)
+  input   Json  // Datos del formulario (FormData)
+  result  Json  // Resultado del cálculo (SolarCalculation)
+  
+  // Relaciones
+  provider    Provider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  quoteConfig QuoteConfig @relation(fields: [quoteConfigId], references: [id], onDelete: Cascade)
+  lead        Lead?       // Relación 1-a-1 con Lead (opcional)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Índices para búsquedas rápidas
+  @@index([providerId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@map("quotes")
+}
+
+/**
+ * Modelo Lead: Gestión de seguimiento de cotizaciones
+ */
+model Lead {
+  id      String     @id @default(uuid())
+  quoteId String     @unique
+  status  LeadStatus @default(NEW)
+  notes   String?    @db.Text
+  
+  // Relación con Quote
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([status])
+  @@index([createdAt])
+  @@map("leads")
+}
+
 enum QuoteType {
   SOLAR
   GYM
+}
+
+enum QuoteStatus {
+  PENDING   // Cotización generada, esperando acción del cliente
+  ACCEPTED  // Cliente aceptó la cotización
+  REJECTED  // Cliente rechazó la cotización
+  EXPIRED   // Cotización venció
+}
+
+enum LeadStatus {
+  NEW        // Lead nuevo, sin contactar
+  CONTACTED  // Lead contactado
+  QUALIFIED  // Lead calificado (tiene potencial)
+  CONVERTED  // Lead convertido en cliente
+  LOST       // Lead perdido
 }

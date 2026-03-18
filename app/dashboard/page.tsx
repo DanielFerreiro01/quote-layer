@@ -1,274 +1,153 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Sparkles, Zap, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  Activity,
-  TrendingUp,
-  Users,
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
-  Zap,
-  HelpCircle,
-  MessageCircle,
-  FileText,
-  ExternalLink,
-} from "lucide-react"
-import Link from "next/link"
+  PlanCard,
+  BillingToggle,
+  AddonsGrid,
+  TrustBadges,
+  FAQSection,
+  EnterpriseCTA,
+} from "@/features/dashboard/components/upgrade";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+const plans = [
+  {
+    name: "Starter",
+    description: "Para empezar a cotizar online sin friccion",
+    monthlyPrice: 19,
+    yearlyPrice: 190,
+    icon: Zap,
+    features: [
+      "1 cotizador activo",
+      "Hasta 50 cotizaciones por mes",
+      "Configuracion basica de precios",
+      "Formulario de contacto",
+      "Branding basico (logo + colores)",
+      "Acceso al dashboard",
+      "Soporte por email",
+    ],
+  },
+  {
+    name: "Pro",
+    description: "Para empresas que cotizan todos los dias",
+    monthlyPrice: 59,
+    yearlyPrice: 590,
+    icon: Sparkles,
+    popular: true,
+    features: [
+      "Todo lo de Starter, mas:",
+      "Cotizaciones ilimitadas",
+      "Historial completo de leads",
+      "Exportar cotizaciones en PDF",
+      "Dominio personalizado",
+      "Personalizacion visual completa",
+      "Preview en tiempo real",
+      "Soporte prioritario",
+    ],
+  },
+  {
+    name: "Business",
+    description: "Para equipos y operaciones mas grandes",
+    monthlyPrice: 179,
+    yearlyPrice: 1790,
+    icon: Building2,
+    features: [
+      "Todo lo de Pro, mas:",
+      "Hasta 5 cotizadores activos",
+      "Gestion de usuarios y roles",
+      "Estados de leads",
+      "Integraciones (email, WhatsApp)",
+      "Acceso a API",
+      "Onboarding asistido",
+    ],
+  },
+];
 
-const stats = [
-  {
-    title: "Total Quotes",
-    value: "1,284",
-    change: "+12.5%",
-    trend: "up",
-    icon: Activity,
-    description: "vs. last month",
-  },
-  {
-    title: "Active Leads",
-    value: "342",
-    change: "+8.2%",
-    trend: "up",
-    icon: Users,
-    description: "vs. last month",
-  },
-  {
-    title: "Avg. Quote Value",
-    value: "$18,450",
-    change: "+4.1%",
-    trend: "up",
-    icon: DollarSign,
-    description: "vs. last month",
-  },
-  {
-    title: "Conversion Rate",
-    value: "24.3%",
-    change: "-2.1%",
-    trend: "down",
-    icon: TrendingUp,
-    description: "vs. last month",
-  },
-]
+const addons = [
+  { name: "Analytics avanzados", price: 15, description: "Metricas detalladas y reportes personalizados" },
+  { name: "White-label completo", price: 25, description: "Elimina toda referencia a SolarQuote" },
+  { name: "Usuarios extra", price: 5, suffix: "/ usuario", description: "Agrega mas miembros a tu equipo" },
+  { name: "Exportaciones avanzadas", price: 10, description: "Excel, CSV y formatos adicionales" },
+  { name: "Reglas personalizadas", price: 20, description: "Logica de precios avanzada" },
+];
 
-const recentQuotes = [
+const faqs = [
   {
-    id: "Q-1234",
-    customer: "John Smith",
-    systemSize: "8.5 kW",
-    value: "$21,250",
-    status: "pending",
-    date: "2 hours ago",
+    question: "Puedo cambiar de plan en cualquier momento?",
+    answer: "Si, puedes actualizar o degradar tu plan cuando quieras. Los cambios se aplican inmediatamente y se prorratea el costo.",
   },
   {
-    id: "Q-1233",
-    customer: "Sarah Johnson",
-    systemSize: "12.0 kW",
-    value: "$30,000",
-    status: "accepted",
-    date: "5 hours ago",
+    question: "Que metodos de pago aceptan?",
+    answer: "Aceptamos todas las tarjetas de credito y debito principales (Visa, Mastercard, American Express), asi como transferencias bancarias para planes anuales.",
   },
   {
-    id: "Q-1232",
-    customer: "Mike Davis",
-    systemSize: "6.0 kW",
-    value: "$15,000",
-    status: "pending",
-    date: "1 day ago",
+    question: "Hay contratos de permanencia?",
+    answer: "No, todos nuestros planes son mensuales sin compromiso. Puedes cancelar en cualquier momento sin penalizaciones.",
   },
   {
-    id: "Q-1231",
-    customer: "Emily Brown",
-    systemSize: "10.5 kW",
-    value: "$26,250",
-    status: "rejected",
-    date: "2 days ago",
+    question: "Que pasa con mis datos si cancelo?",
+    answer: "Tus datos se mantienen durante 30 dias despues de la cancelacion. Puedes exportarlos en cualquier momento o reactivar tu cuenta.",
   },
-]
+];
 
-export default function DashboardPage() {
+export default function UpgradePage() {
+  const [isYearly, setIsYearly] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
   return (
-    <div className="h-full overflow-y-auto p-6 pb-8 space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Overview of your solar quote performance
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/quote-config">
-            <Zap className="mr-2 size-4" />
-            Configure Calculator
-          </Link>
-        </Button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                {stat.trend === "up" ? (
-                  <ArrowUpRight className="mr-1 size-3 text-green-500" />
-                ) : (
-                  <ArrowDownRight className="mr-1 size-3 text-red-500" />
-                )}
-                <span
-                  className={
-                    stat.trend === "up" ? "text-green-500" : "text-red-500"
-                  }
-                >
-                  {stat.change}
-                </span>
-                <span className="ml-1">{stat.description}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Recent Quotes & Quick Actions */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Quotes */}
-        <Card className="flex flex-col lg:col-span-2">
-          <CardHeader className="flex-shrink-0 border-b border-border">
-            <CardTitle>Recent Quotes</CardTitle>
-            <CardDescription>
-              Latest quote requests from your calculator
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-0">
-            <div className="max-h-[340px] space-y-3 overflow-y-auto p-6">
-              {recentQuotes.map((quote) => (
-                <div
-                  key={quote.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                      <Zap className="size-4 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{quote.customer}</p>
-                        <Badge
-                          variant={
-                            quote.status === "accepted"
-                              ? "default"
-                              : quote.status === "pending"
-                                ? "secondary"
-                                : "destructive"
-                          }
-                          className="text-[10px] px-1.5 py-0"
-                        >
-                          {quote.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {quote.id} • {quote.systemSize}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{quote.value}</p>
-                    <p className="text-xs text-muted-foreground">{quote.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <div className="flex-shrink-0 border-t border-border p-4">
-            <Button variant="outline" className="w-full bg-transparent" asChild>
-              <Link href="/dashboard/leads">View All Leads</Link>
-            </Button>
+    <div className="flex h-full flex-col overflow-y-auto">
+      {/* Header */}
+      <div className="border-b border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/dashboard">
+              <ArrowLeft className="size-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-xl font-semibold">Elige tu plan</h1>
+            <p className="text-sm text-muted-foreground">
+              Comienza con 14 dias gratis del plan Pro. Sin tarjeta, sin compromiso.
+            </p>
           </div>
-        </Card>
+        </div>
+      </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks and settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="/dashboard/quote-config">
-                  <Zap className="mr-2 size-4" />
-                  Edit Pricing Variables
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="/dashboard/preview">
-                  <Activity className="mr-2 size-4" />
-                  Preview Calculator
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="/dashboard/leads">
-                  <Users className="mr-2 size-4" />
-                  Manage Leads
-                </Link>
-              </Button>
-              <div className="rounded-lg border border-dashed p-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-8 items-center justify-center rounded-full bg-green-500/10">
-                    <div className="size-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Calculator Active</p>
-                    <p className="text-xs text-muted-foreground">
-                      Accepting new quotes
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Content */}
+      <div className="flex-1 p-6">
+        <div className="mx-auto max-w-5xl space-y-8">
+          {/* Billing Toggle */}
+          <BillingToggle isYearly={isYearly} onToggle={setIsYearly} />
 
-          {/* Support */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="size-5" />
-                Need Help?
-              </CardTitle>
-              <CardDescription>Get support and learn more</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="#">
-                  <MessageCircle className="mr-2 size-4" />
-                  Contact Support
-                  <ExternalLink className="ml-auto size-3 text-muted-foreground" />
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="#">
-                  <FileText className="mr-2 size-4" />
-                  Documentation
-                  <ExternalLink className="ml-auto size-3 text-muted-foreground" />
-                </Link>
-              </Button>
-              <p className="text-xs text-muted-foreground pt-2">
-                Available Monday to Friday, 9am - 6pm EST
-              </p>
-            </CardContent>
-          </Card>
+          {/* Plans Grid */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan.name}
+                plan={plan}
+                isYearly={isYearly}
+                isSelected={selectedPlan === plan.name}
+                onSelect={() => setSelectedPlan(plan.name)}
+              />
+            ))}
+          </div>
+
+          {/* Add-ons Section */}
+          <AddonsGrid addons={addons} />
+
+          {/* Trust Badges */}
+          <TrustBadges />
+
+          {/* FAQs */}
+          <FAQSection faqs={faqs} />
+
+          {/* Enterprise CTA */}
+          <EnterpriseCTA />
         </div>
       </div>
     </div>
-  )
+  );
 }
