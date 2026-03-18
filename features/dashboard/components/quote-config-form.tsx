@@ -1,7 +1,4 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
-import { RotateCcw, Loader2, Save } from "lucide-react"
+"use client";
 
 import {
   Settings,
@@ -10,12 +7,12 @@ import {
   Users,
   Building2,
   Wrench,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -23,25 +20,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import type { QuoteConfig } from "@/lib/types"
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import type { QuoteConfig } from "@/lib/types";
 
 interface QuoteConfigFormProps {
-  config: QuoteConfig
-  onConfigChange: (config: QuoteConfig) => void
-  handleReset: () => void
-  handleSave: () => void
-  isSaving: boolean
+  config: QuoteConfig;
+  onConfigChange: (config: QuoteConfig) => void;
 }
 
-export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSave, isSaving }: QuoteConfigFormProps) {
+export function QuoteConfigForm({ config, onConfigChange }: QuoteConfigFormProps) {
   const updateConfig = <K extends keyof QuoteConfig>(
     key: K,
     value: QuoteConfig[K]
   ) => {
-    onConfigChange({ ...config, [key]: value })
-  }
+    onConfigChange({ ...config, [key]: value });
+  };
 
   const updateClientMultiplier = (
     key: keyof QuoteConfig["clientMultipliers"],
@@ -50,8 +44,8 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
     onConfigChange({
       ...config,
       clientMultipliers: { ...config.clientMultipliers, [key]: value },
-    })
-  }
+    });
+  };
 
   const updateMountingMultiplier = (
     key: keyof QuoteConfig["mountingMultipliers"],
@@ -60,8 +54,8 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
     onConfigChange({
       ...config,
       mountingMultipliers: { ...config.mountingMultipliers, [key]: value },
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -83,61 +77,7 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="providerName">Provider Name</Label>
-              <Input
-                id="providerName"
-                value={config.providerName}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">
-                Contact support to change your provider name
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quoteStatus">Quote Status</Label>
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Calculator</span>
-                    <Badge variant={config.isActive ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
-                      {config.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Enable or disable the public quote calculator
-                  </p>
-                </div>
-                <Switch
-                  id="quoteStatus"
-                  checked={config.isActive}
-                  onCheckedChange={(checked) => updateConfig("isActive", checked)}
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Base Costs */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-              <DollarSign className="size-4 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Base Costs</CardTitle>
-              <CardDescription>
-                Define your pricing structure and electricity rates
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="baseCostPerKw">Base Cost per kW (USD)</Label>
+              <Label htmlFor="baseCostPerKw">Base Cost per kW ($)</Label>
               <Input
                 id="baseCostPerKw"
                 type="number"
@@ -148,9 +88,7 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="electricityCostPerKwh">
-                Electricity Cost per kWh
-              </Label>
+              <Label htmlFor="electricityCostPerKwh">Electricity Cost ($/kWh)</Label>
               <Input
                 id="electricityCostPerKwh"
                 type="number"
@@ -161,25 +99,11 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="annualElectricityIncrease">
-                Annual Price Increase (%)
-              </Label>
-              <Input
-                id="annualElectricityIncrease"
-                type="number"
-                step="0.1"
-                value={config.annualElectricityIncrease}
-                onChange={(e) =>
-                  updateConfig("annualElectricityIncrease", Number(e.target.value))
-                }
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* System Parameters */}
+      {/* System Configuration */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -187,45 +111,32 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
               <SunMedium className="size-4 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">System Parameters</CardTitle>
+              <CardTitle className="text-base">System Configuration</CardTitle>
               <CardDescription>
-                Technical specifications for solar calculations
+                Technical specifications for solar panels
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="panelWattCapacity">Panel Watt Capacity</Label>
+              <Label htmlFor="panelPower">Panel Power (W)</Label>
               <Input
-                id="panelWattCapacity"
+                id="panelPower"
                 type="number"
-                value={config.panelWattCapacity}
+                value={config.panelPower}
                 onChange={(e) =>
-                  updateConfig("panelWattCapacity", Number(e.target.value))
+                  updateConfig("panelPower", Number(e.target.value))
                 }
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sunHoursPerDay">Sun Hours per Day</Label>
-              <Input
-                id="sunHoursPerDay"
-                type="number"
-                step="0.1"
-                value={config.sunHoursPerDay}
-                onChange={(e) =>
-                  updateConfig("sunHoursPerDay", Number(e.target.value))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="systemEfficiency">System Efficiency (0-1)</Label>
+              <Label htmlFor="systemEfficiency">System Efficiency (%)</Label>
               <Input
                 id="systemEfficiency"
                 type="number"
                 step="0.01"
-                min="0"
                 max="1"
                 value={config.systemEfficiency}
                 onChange={(e) =>
@@ -234,13 +145,14 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="projectionYears">Projection Years</Label>
+              <Label htmlFor="peakSunHours">Peak Sun Hours</Label>
               <Input
-                id="projectionYears"
+                id="peakSunHours"
                 type="number"
-                value={config.projectionYears}
+                step="0.1"
+                value={config.peakSunHours}
                 onChange={(e) =>
-                  updateConfig("projectionYears", Number(e.target.value))
+                  updateConfig("peakSunHours", Number(e.target.value))
                 }
               />
             </div>
@@ -337,12 +249,12 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-              <Building2 className="size-4 text-primary" />
+              <Wrench className="size-4 text-primary" />
             </div>
             <div>
               <CardTitle className="text-base">Mounting Type Multipliers</CardTitle>
               <CardDescription>
-                Price adjustments based on installation type
+                Cost adjustments based on installation type
               </CardDescription>
             </div>
           </div>
@@ -434,41 +346,77 @@ export function QuoteConfigForm({ config, onConfigChange, handleReset, handleSav
         </CardContent>
       </Card>
 
-      {/* Maintenance */}
+      {/* Financial Settings */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-              <Wrench className="size-4 text-primary" />
+              <DollarSign className="size-4 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">Maintenance</CardTitle>
+              <CardTitle className="text-base">Financial Settings</CardTitle>
               <CardDescription>
-                Annual maintenance cost configuration
+                Margin and financing configuration
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="max-w-sm space-y-2">
-            <Label htmlFor="annualMaintenanceRate">
-              Annual Maintenance Rate (%)
-            </Label>
-            <Input
-              id="annualMaintenanceRate"
-              type="number"
-              step="0.1"
-              value={config.annualMaintenanceRate}
-              onChange={(e) =>
-                updateConfig("annualMaintenanceRate", Number(e.target.value))
-              }
-            />
-            <p className="text-xs text-muted-foreground">
-              Percentage of system cost charged annually for maintenance
-            </p>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="marginPercentage">Margin Percentage (%)</Label>
+              <Input
+                id="marginPercentage"
+                type="number"
+                value={config.marginPercentage}
+                onChange={(e) =>
+                  updateConfig("marginPercentage", Number(e.target.value))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="financing">Enable Financing</Label>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm">Offer financing options</span>
+                <Switch
+                  id="financing"
+                  checked={config.enableFinancing}
+                  onCheckedChange={(checked) =>
+                    updateConfig("enableFinancing", checked)
+                  }
+                />
+              </div>
+            </div>
           </div>
+          {config.enableFinancing && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="interestRate">Interest Rate (%)</Label>
+                <Input
+                  id="interestRate"
+                  type="number"
+                  step="0.1"
+                  value={config.interestRate}
+                  onChange={(e) =>
+                    updateConfig("interestRate", Number(e.target.value))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="loanTermYears">Loan Term (years)</Label>
+                <Input
+                  id="loanTermYears"
+                  type="number"
+                  value={config.loanTermYears}
+                  onChange={(e) =>
+                    updateConfig("loanTermYears", Number(e.target.value))
+                  }
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

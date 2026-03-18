@@ -12,8 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { QuoteConfig, QuotePreviewInputs } from "@/lib/types"
+
 import { calculateQuote } from "@/lib/quote-calculator"
+import { QuoteConfig, QuotePreviewInputs } from "@/lib/types"
+
 
 interface QuotePreviewProps {
   config: QuoteConfig
@@ -117,7 +119,7 @@ export function QuotePreview({ config }: QuotePreviewProps) {
               <Zap className="size-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">System Size</span>
             </div>
-            <span className="text-sm font-medium">{outputs.systemSizeKw} kW</span>
+            <span className="text-sm font-medium">{outputs.systemSize} kW</span>
           </div>
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center gap-2">
@@ -131,7 +133,7 @@ export function QuotePreview({ config }: QuotePreviewProps) {
               <TrendingUp className="size-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">ROI Period</span>
             </div>
-            <span className="text-sm font-medium">{outputs.roiYears} years</span>
+            <span className="text-sm font-medium">{outputs.paybackYears} years</span>
           </div>
         </div>
       </div>
@@ -144,7 +146,7 @@ export function QuotePreview({ config }: QuotePreviewProps) {
             <span className="font-medium">Total Estimate</span>
           </div>
           <span className="text-xl font-bold text-primary">
-            ${outputs.estimatedCost.toLocaleString()}
+            ${outputs.totalCost.toLocaleString()}
           </span>
         </div>
       </div>

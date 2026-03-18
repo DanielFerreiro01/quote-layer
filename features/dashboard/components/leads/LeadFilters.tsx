@@ -4,7 +4,7 @@ import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SearchBar } from "../shared/SearchBar";
-import { useFiltersStore } from "@/features/dashboard/stores/useFiltersStore";
+import { useFiltersStore } from "@/features/dashboard/store/useFiltersStore";
 
 export function LeadFilters() {
   const { searchQuery, setSearchQuery } = useFiltersStore();

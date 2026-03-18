@@ -1,152 +1,93 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Zap, Building2 } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  PlanCard,
-  BillingToggle,
-  AddonsGrid,
-  TrustBadges,
-  FAQSection,
-  EnterpriseCTA,
-} from "@/features/dashboard/components/upgrade";
+import { StatsCards, RecentQuotesCard, QuickActionsCard } from "@/features/dashboard/components/overview";
 
-const plans = [
+// TODO: Reemplazar con datos reales usando server actions
+const mockStats = {
+  totalQuotes: {
+    value: 1284,
+    change: 12.5,
+    trend: 'up' as const,
+  },
+  activeLeads: {
+    value: 342,
+    change: 8.2,
+    trend: 'up' as const,
+  },
+  avgQuoteValue: {
+    value: 18450,
+    change: 4.1,
+    trend: 'up' as const,
+  },
+  conversionRate: {
+    value: 24.3,
+    change: -2.1,
+    trend: 'down' as const,
+  },
+};
+
+const mockRecentQuotes = [
   {
-    name: "Starter",
-    description: "Para empezar a cotizar online sin friccion",
-    monthlyPrice: 19,
-    yearlyPrice: 190,
-    icon: Zap,
-    features: [
-      "1 cotizador activo",
-      "Hasta 50 cotizaciones por mes",
-      "Configuracion basica de precios",
-      "Formulario de contacto",
-      "Branding basico (logo + colores)",
-      "Acceso al dashboard",
-      "Soporte por email",
-    ],
+    id: "Q-1234",
+    customer: "John Smith",
+    systemSize: "8.5 kW",
+    value: "$21,250",
+    status: "pending" as const,
+    date: "2 hours ago",
   },
   {
-    name: "Pro",
-    description: "Para empresas que cotizan todos los dias",
-    monthlyPrice: 59,
-    yearlyPrice: 590,
-    icon: Sparkles,
-    popular: true,
-    features: [
-      "Todo lo de Starter, mas:",
-      "Cotizaciones ilimitadas",
-      "Historial completo de leads",
-      "Exportar cotizaciones en PDF",
-      "Dominio personalizado",
-      "Personalizacion visual completa",
-      "Preview en tiempo real",
-      "Soporte prioritario",
-    ],
+    id: "Q-1233",
+    customer: "Sarah Johnson",
+    systemSize: "12.0 kW",
+    value: "$30,000",
+    status: "accepted" as const,
+    date: "5 hours ago",
   },
   {
-    name: "Business",
-    description: "Para equipos y operaciones mas grandes",
-    monthlyPrice: 179,
-    yearlyPrice: 1790,
-    icon: Building2,
-    features: [
-      "Todo lo de Pro, mas:",
-      "Hasta 5 cotizadores activos",
-      "Gestion de usuarios y roles",
-      "Estados de leads",
-      "Integraciones (email, WhatsApp)",
-      "Acceso a API",
-      "Onboarding asistido",
-    ],
+    id: "Q-1232",
+    customer: "Mike Davis",
+    systemSize: "6.0 kW",
+    value: "$15,000",
+    status: "pending" as const,
+    date: "1 day ago",
+  },
+  {
+    id: "Q-1231",
+    customer: "Emily Brown",
+    systemSize: "10.5 kW",
+    value: "$26,250",
+    status: "rejected" as const,
+    date: "2 days ago",
   },
 ];
 
-const addons = [
-  { name: "Analytics avanzados", price: 15, description: "Metricas detalladas y reportes personalizados" },
-  { name: "White-label completo", price: 25, description: "Elimina toda referencia a SolarQuote" },
-  { name: "Usuarios extra", price: 5, suffix: "/ usuario", description: "Agrega mas miembros a tu equipo" },
-  { name: "Exportaciones avanzadas", price: 10, description: "Excel, CSV y formatos adicionales" },
-  { name: "Reglas personalizadas", price: 20, description: "Logica de precios avanzada" },
-];
-
-const faqs = [
-  {
-    question: "Puedo cambiar de plan en cualquier momento?",
-    answer: "Si, puedes actualizar o degradar tu plan cuando quieras. Los cambios se aplican inmediatamente y se prorratea el costo.",
-  },
-  {
-    question: "Que metodos de pago aceptan?",
-    answer: "Aceptamos todas las tarjetas de credito y debito principales (Visa, Mastercard, American Express), asi como transferencias bancarias para planes anuales.",
-  },
-  {
-    question: "Hay contratos de permanencia?",
-    answer: "No, todos nuestros planes son mensuales sin compromiso. Puedes cancelar en cualquier momento sin penalizaciones.",
-  },
-  {
-    question: "Que pasa con mis datos si cancelo?",
-    answer: "Tus datos se mantienen durante 30 dias despues de la cancelacion. Puedes exportarlos en cualquier momento o reactivar tu cuenta.",
-  },
-];
-
-export default function UpgradePage() {
-  const [isYearly, setIsYearly] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-
+export default function DashboardPage() {
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      {/* Header */}
-      <div className="border-b border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/dashboard">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold">Elige tu plan</h1>
-            <p className="text-sm text-muted-foreground">
-              Comienza con 14 dias gratis del plan Pro. Sin tarjeta, sin compromiso.
-            </p>
-          </div>
+    <div className="h-full overflow-y-auto p-6 pb-8 space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Overview of your solar quote performance
+          </p>
         </div>
+        <Button asChild>
+          <Link href="/dashboard/quote-config">
+            <Zap className="mr-2 size-4" />
+            Configure Calculator
+          </Link>
+        </Button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-6">
-        <div className="mx-auto max-w-5xl space-y-8">
-          {/* Billing Toggle */}
-          <BillingToggle isYearly={isYearly} onToggle={setIsYearly} />
+      {/* Stats Grid */}
+      <StatsCards stats={mockStats} />
 
-          {/* Plans Grid */}
-          <div className="grid gap-6 md:grid-cols-3">
-            {plans.map((plan) => (
-              <PlanCard
-                key={plan.name}
-                plan={plan}
-                isYearly={isYearly}
-                isSelected={selectedPlan === plan.name}
-                onSelect={() => setSelectedPlan(plan.name)}
-              />
-            ))}
-          </div>
-
-          {/* Add-ons Section */}
-          <AddonsGrid addons={addons} />
-
-          {/* Trust Badges */}
-          <TrustBadges />
-
-          {/* FAQs */}
-          <FAQSection faqs={faqs} />
-
-          {/* Enterprise CTA */}
-          <EnterpriseCTA />
-        </div>
+      {/* Recent Quotes & Quick Actions */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <RecentQuotesCard quotes={mockRecentQuotes} />
+        <QuickActionsCard />
       </div>
     </div>
   );

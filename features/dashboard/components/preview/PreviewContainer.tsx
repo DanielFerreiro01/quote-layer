@@ -1,9 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { QuotePreview } from "@/components/quote-preview";
-import { defaultQuoteConfig } from "@/lib/types";
+
 import type { ViewMode } from "./DeviceToggle";
+import { QuotePreview } from "../quote-preview";
+import { defaultQuoteConfig } from "@/lib/types";
 
 interface PreviewContainerProps {
   viewMode: ViewMode;

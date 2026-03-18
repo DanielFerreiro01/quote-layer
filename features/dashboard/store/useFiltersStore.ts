@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { LeadStatus } from './useLeadsStore';
+import type { LeadStatus } from '../types';
 
 interface FiltersState {
   // Búsqueda

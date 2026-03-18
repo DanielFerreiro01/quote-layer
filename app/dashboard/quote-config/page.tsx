@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { Save, RotateCcw, Loader2 } from "lucide-react"
-import { QuoteConfigForm } from "@/components/quote-config-form"
-import { QuotePreview } from "@/components/quote-preview"
+import { QuoteConfigForm } from "@/features/dashboard/components/quote-config-form"
+import { QuotePreview } from "@/features/dashboard/components/quote-preview"
 import { Button } from "@/components/ui/button"
-import { defaultQuoteConfig } from "@/lib/types"
-import type { QuoteConfig } from "@/lib/types"
+import { defaultQuoteConfig, QuoteConfig } from "@/lib/types"
+
 
 export default function QuoteConfigPage() {
   const [config, setConfig] = useState<QuoteConfig>(defaultQuoteConfig)

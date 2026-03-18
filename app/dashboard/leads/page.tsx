@@ -9,7 +9,7 @@ import {
   LeadDetailsSheet, 
   BulkActionsBar 
 } from "@/features/dashboard/components/leads";
-import { useLeadsStore } from "@/features/dashboard/stores/useLeadsStore";
+import { useLeadsStore } from "@/features/dashboard/store/useLeadsStore";
 import type { Lead, LeadStatus } from "@/features/dashboard/types";
 
 // TODO: Reemplazar con useLeads hook y datos reales
