@@ -1,6 +1,4 @@
-// ✅ features/quote-wizard/solar/config/wizard.config.ts
-import { z } from "zod";
-import type { WizardConfig } from "../../types";
+import type { WizardConfig } from "@/features/quote-wizard/types";
 import {
   ContactDataSchema,
   ConsumptionDataSchema,

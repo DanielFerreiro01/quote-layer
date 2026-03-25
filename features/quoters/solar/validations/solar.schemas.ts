@@ -3,7 +3,7 @@ export {
   ConsumptionDataSchema,
   InstallationDataSchema,
   FormDataSchema,
-} from '@/lib/solar/solar-types';
+} from "@/lib/solar/solar-types";
 
 export type {
   ContactData,
@@ -13,4 +13,4 @@ export type {
   ClientType,
   TimeProfile,
   MountingType,
-} from '@/lib/solar/solar-types';
+} from "@/lib/solar/solar-types";
