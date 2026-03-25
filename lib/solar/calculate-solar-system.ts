@@ -19,12 +19,21 @@ export function calculateSolarSystem(
   // ========================================
 
   const annualConsumption = consumption.monthlyKwh * 12;
-  const peakSunHours = systemConfig.peakSunHours[consumption.timeProfile];
+
+  // Guard: peakSunHoursNight puede ser 0 en la DB (perfil nocturno sin horas pico)
+  // En ese caso usamos las horas mixtas como fallback para evitar división por cero
+  const rawPeakSunHours = systemConfig.peakSunHours[consumption.timeProfile];
+  const peakSunHours = rawPeakSunHours > 0
+    ? rawPeakSunHours
+    : systemConfig.peakSunHours.mixed;
+
+  const systemEfficiency = systemConfig.systemEfficiency / 100;
+
   const dailyProductionNeeded = annualConsumption / 365;
-  const systemSizeKw = dailyProductionNeeded / (peakSunHours * (systemConfig.systemEfficiency / 100));
+  const systemSizeKw = dailyProductionNeeded / (peakSunHours * systemEfficiency);
   const panelCount = Math.ceil((systemSizeKw * 1000) / systemConfig.panelPower);
   const actualSystemSizeKw = (panelCount * systemConfig.panelPower) / 1000;
-  const annualProduction = actualSystemSizeKw * peakSunHours * 365 * (systemConfig.systemEfficiency / 100);
+  const annualProduction = actualSystemSizeKw * peakSunHours * 365 * systemEfficiency;
   const inverterPower = actualSystemSizeKw * 0.85;
   const coveragePercentage = Math.min((annualProduction / annualConsumption) * 100, 100);
 
@@ -37,8 +46,6 @@ export function calculateSolarSystem(
   const installationCost = actualSystemSizeKw * costConfig.installationCostPerKw;
   const structureCost = actualSystemSizeKw * costConfig.structureCostPerKw;
   const mountingCost = actualSystemSizeKw * costConfig.mountingCosts[installation.mountingType];
-
-  // Costo adicional por tipo de sistema (baterías, inversor híbrido, etc.)
   const systemTypeExtraCost = actualSystemSizeKw * SYSTEM_TYPE_EXTRA_COST_PER_KW[system.systemType];
 
   const subtotal = panelsCost + inverterCost + installationCost + structureCost + mountingCost + systemTypeExtraCost;
@@ -56,8 +63,10 @@ export function calculateSolarSystem(
     const loanAmount = totalCost - downPayment;
     const monthlyRate = config.financing.interestRate / 100 / 12;
     const termMonths = config.financing.termMonths;
-    const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) /
-                          (Math.pow(1 + monthlyRate, termMonths) - 1);
+    const monthlyPayment =
+      loanAmount *
+      ((monthlyRate * Math.pow(1 + monthlyRate, termMonths)) /
+        (Math.pow(1 + monthlyRate, termMonths) - 1));
     const totalPayments = monthlyPayment * termMonths;
     const totalInterest = totalPayments - loanAmount;
 
@@ -89,12 +98,12 @@ export function calculateSolarSystem(
   const taxRate = clientConfig.taxRate / 100;
   const inflationRate = clientConfig.inflationRate / 100;
 
-  const monthlyEnergyWithoutSolar = (consumption.monthlyKwh * energyCost) + fixedCharge;
-  const monthlyBillWithoutSolar = monthlyEnergyWithoutSolar * (1 + taxRate);
+  const monthlyBillWithoutSolar =
+    (consumption.monthlyKwh * energyCost + fixedCharge) * (1 + taxRate);
 
   const residualConsumption = consumption.monthlyKwh * (1 - coveragePercentage / 100);
-  const monthlyEnergyWithSolar = (residualConsumption * energyCost) + fixedCharge;
-  const monthlyBillWithSolar = monthlyEnergyWithSolar * (1 + taxRate);
+  const monthlyBillWithSolar =
+    (residualConsumption * energyCost + fixedCharge) * (1 + taxRate);
 
   const monthlySavings = monthlyBillWithoutSolar - monthlyBillWithSolar;
   const annualSavings = monthlySavings * 12;
@@ -109,9 +118,11 @@ export function calculateSolarSystem(
     const adjustedCoverage = Math.min((adjustedProduction / annualConsumption) * 100, 100);
     const yearlyInflation = Math.pow(1 + inflationRate, year);
     const energyCostThisYear = energyCost * yearlyInflation;
-    const yearlyBillWithoutSolar = (annualConsumption * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
+    const yearlyBillWithoutSolar =
+      (annualConsumption * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
     const residualConsumptionThisYear = annualConsumption * (1 - adjustedCoverage / 100);
-    const yearlyBillWithSolar = (residualConsumptionThisYear * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
+    const yearlyBillWithSolar =
+      (residualConsumptionThisYear * energyCostThisYear + fixedCharge * 12) * (1 + taxRate);
     const savingsThisYear = yearlyBillWithoutSolar - yearlyBillWithSolar;
     cumulativeSavings += savingsThisYear;
 
@@ -125,10 +136,6 @@ export function calculateSolarSystem(
   }
 
   const roi25Years = ((cumulativeSavings - totalCost) / totalCost) * 100;
-
-  // ========================================
-  // RESULTADO FINAL
-  // ========================================
 
   return {
     system: {

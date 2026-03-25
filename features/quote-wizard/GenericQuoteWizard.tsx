@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { getQuoterPlugin } from "@/features/quoters/registry";
 import { useWizardNavigation } from "./hooks/useWizardNavigation";
 import { useWizardValidation } from "./hooks/useWizardValidation";
@@ -32,16 +32,23 @@ function QuoteWizardInner({
   const [calculationResult, setCalculationResult] = useState<unknown>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
+  // Ref para siempre tener el formData más actualizado en handleNext,
+  // evitando el stale closure cuando React aún no commitó el último setState
+  const formDataRef = useRef(formData);
+
   const handleFormChange = useCallback((data: unknown) => {
+    formDataRef.current = data;
     setFormData(data);
   }, []);
 
   const handleNext = async () => {
     const currentStepConfig = plugin.wizardConfig.steps[navigation.currentStep - 1];
 
+    // Usar ref para validación — garantiza el valor más reciente
+    const currentFormData = formDataRef.current;
+
     if (!currentStepConfig?.skipValidation) {
-      // Extraer solo los datos relevantes para este step usando getStepData del plugin
-      const stepData = plugin.getStepData(navigation.currentStep, formData);
+      const stepData = plugin.getStepData(navigation.currentStep, currentFormData);
       const isValid = validateStep(navigation.currentStep, stepData);
       if (!isValid) return;
     }
@@ -51,7 +58,8 @@ function QuoteWizardInner({
     if (isPreResultStep && !calculationResult) {
       setIsCalculating(true);
       try {
-        const result = await plugin.calculate(formData, tenant);
+        // Usar ref para el cálculo — garantiza el valor más reciente
+        const result = await plugin.calculate(currentFormData, tenant);
         setCalculationResult(result);
         navigation.next();
       } catch (error) {

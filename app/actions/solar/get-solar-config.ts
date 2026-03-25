@@ -1,9 +1,8 @@
-// ✅ app/actions/solar/get-solar-config.ts
 "use server";
 
 import { prisma } from "@/lib/prisma";
 import type { SolarConfig } from "@/lib/solar/solar-types";
-import { QuoteType } from "@prisma/client"; // ✅ Import correcto
+import { QuoteType } from "@prisma/client";
 
 export async function getSolarConfig(providerSlug: string): Promise<SolarConfig> {
   const provider = await prisma.provider.findUnique({
@@ -27,67 +26,71 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
     throw new Error(`Configuración solar no encontrada para '${providerSlug}'`);
   }
 
-  const dbConfig = quoteConfig.solarConfig;
+  const db = quoteConfig.solarConfig;
+
+  // systemEfficiency se deriva de systemLosses — nunca puede ser undefined
+  // systemLosses: 15 → systemEfficiency: 85
+  const systemEfficiency = 100 - db.systemLosses;
 
   return {
     clients: {
       residential: {
         tariff: {
-          energyCost: dbConfig.residentialEnergyCost,
-          fixedCharge: dbConfig.residentialFixedCharge,
+          energyCost: db.residentialEnergyCost,
+          fixedCharge: db.residentialFixedCharge,
         },
-        taxRate: dbConfig.residentialTaxRate,
-        inflationRate: dbConfig.residentialInflationRate,
+        taxRate: db.residentialTaxRate,
+        inflationRate: db.residentialInflationRate,
       },
       industrial: {
         tariff: {
-          energyCost: dbConfig.industrialEnergyCost,
-          fixedCharge: dbConfig.industrialFixedCharge,
-          demandCharge: dbConfig.industrialDemandCharge ?? undefined,
+          energyCost: db.industrialEnergyCost,
+          fixedCharge: db.industrialFixedCharge,
+          demandCharge: db.industrialDemandCharge ?? undefined,
         },
-        taxRate: dbConfig.industrialTaxRate,
-        inflationRate: dbConfig.industrialInflationRate,
+        taxRate: db.industrialTaxRate,
+        inflationRate: db.industrialInflationRate,
       },
       agro: {
         tariff: {
-          energyCost: dbConfig.agroEnergyCost,
-          fixedCharge: dbConfig.agroFixedCharge,
+          energyCost: db.agroEnergyCost,
+          fixedCharge: db.agroFixedCharge,
         },
-        taxRate: dbConfig.agroTaxRate,
-        inflationRate: dbConfig.agroInflationRate,
+        taxRate: db.agroTaxRate,
+        inflationRate: db.agroInflationRate,
       },
     },
     system: {
-      panelPower: dbConfig.panelPower,
-      panelEfficiency: dbConfig.panelEfficiency,
-      systemLosses: dbConfig.systemLosses,
-      systemEfficiency: 100 - dbConfig.systemLosses, // ✅ Calcular de systemLosses
-      degradationRate: dbConfig.degradationRate,
+      panelPower: db.panelPower,
+      panelEfficiency: db.panelEfficiency,
+      systemLosses: db.systemLosses,
+      systemEfficiency,           // calculado, nunca undefined
+      degradationRate: db.degradationRate,
       peakSunHours: {
-        day: dbConfig.peakSunHoursDay,
-        night: dbConfig.peakSunHoursNight,
-        mixed: dbConfig.peakSunHoursMixed,
+        day: db.peakSunHoursDay,
+        night: db.peakSunHoursNight,
+        mixed: db.peakSunHoursMixed,
       },
     },
     costs: {
-      panelCost: dbConfig.panelCost,
-      inverterCost: dbConfig.inverterCost,
-      inverterCostPerKw: dbConfig.inverterCostPerKw,
-      installationCostPerKw: dbConfig.installationCostPerKw,
-      structureCostPerKw: dbConfig.structureCostPerKw,
-      marginPercentage: dbConfig.marginPercentage,
+      panelCost: db.panelCost,
+      inverterCost: db.inverterCost,
+      inverterCostPerKw: db.inverterCostPerKw,
+      installationCostPerKw: db.installationCostPerKw,
+      structureCostPerKw: db.structureCostPerKw,
+      marginPercentage: db.marginPercentage,
       mountingCosts: {
-        'roof-sheet': dbConfig.mountingCostRoofSheet,
-        'roof-tile': dbConfig.mountingCostRoofTile,
-        'ground': dbConfig.mountingCostGround,
-        'carport': dbConfig.mountingCostCarport,
+        "roof-sheet": db.mountingCostRoofSheet,
+        "roof-tile": db.mountingCostRoofTile,
+        "ground": db.mountingCostGround,
+        "carport": db.mountingCostCarport,
       },
     },
     financing: {
-      enabled: dbConfig.financingEnabled,
-      downPaymentPercentage: dbConfig.downPaymentPercentage,
-      interestRate: dbConfig.interestRate,
-      termMonths: dbConfig.termMonths,
+      enabled: db.financingEnabled,
+      downPaymentPercentage: db.downPaymentPercentage,
+      interestRate: db.interestRate,
+      termMonths: db.termMonths,
     },
   };
 }
