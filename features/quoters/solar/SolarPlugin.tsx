@@ -8,6 +8,7 @@ import { StepConsumption } from "./steps/step-consumption";
 import { StepInstallation } from "./steps/step-installation";
 import { StepResults } from "./steps/step-results";
 import { StepCTA } from "./steps/step-cta";
+import { StepSystem } from "./steps/step-system";
 
 const initialFormData: FormData = {
   contact: {
@@ -20,6 +21,9 @@ const initialFormData: FormData = {
     monthlyKwh: 500,
     timeProfile: "mixed",
   },
+  system: {
+    systemType: "on-grid",
+  },
   installation: {
     mountingType: "roof-sheet",
   },
@@ -27,7 +31,7 @@ const initialFormData: FormData = {
 
 export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
   id: "solar",
-  label: "SolarQuote Pro",
+  label: "Energía Solar",
   description: "Cotizador de instalaciones de paneles solares",
   icon: <Sun className="h-5 w-5" />,
 
@@ -55,6 +59,17 @@ export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
         <StepConsumption
           data={data.consumption}
           onChange={(consumption) => onChange({ ...data, consumption })}
+        />
+      ),
+    },
+    {
+      id: "system",
+      label: "Tipo de sistema",
+      shortLabel: "Sistema",
+      render: (data, onChange) => (
+        <StepSystem
+          data={data.system}
+          onChange={(system) => onChange({ ...data, system })}
         />
       ),
     },
@@ -98,7 +113,8 @@ export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
     switch (step) {
       case 1: return formData.contact;
       case 2: return formData.consumption;
-      case 3: return formData.installation;
+      case 3: return formData.system;
+      case 4: return formData.installation;
       default: return formData;
     }
   },
@@ -114,18 +130,10 @@ export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
     secondaryLabel: "Potencia del sistema",
     badge: "Solar",
     extraValues: [
-      {
-        label: "Paneles",
-        value: `${result.system.panels} unidades`,
-      },
-      {
-        label: "Retorno",
-        value: `${result.economics.paybackYears} años`,
-      },
-      {
-        label: "Ahorro mensual",
-        value: `$${result.economics.monthlySavings.toLocaleString()}`,
-      },
+      { label: "Sistema", value: result.system.systemType },
+      { label: "Paneles", value: `${result.system.panels} unidades` },
+      { label: "Retorno", value: `${result.economics.paybackYears} años` },
+      { label: "Ahorro mensual", value: `$${result.economics.monthlySavings.toLocaleString()}` },
     ],
   }),
 
@@ -133,7 +141,7 @@ export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
     <div className="space-y-2 text-sm">
       <div className="flex justify-between">
         <span className="text-muted-foreground">Sistema</span>
-        <span className="font-medium">{result.system.power} kW</span>
+        <span className="font-medium">{result.system.power} kW · {result.system.systemType}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Paneles</span>
@@ -152,7 +160,7 @@ export const SolarPlugin: QuoterPlugin<FormData, SolarCalculation> = {
         <span className="font-medium">${result.economics.monthlySavings.toLocaleString()}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-muted-foreground">Retorno de inversión</span>
+        <span className="text-muted-foreground">Retorno</span>
         <span className="font-medium">{result.economics.paybackYears} años</span>
       </div>
     </div>

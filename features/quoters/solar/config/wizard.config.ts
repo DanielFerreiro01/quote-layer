@@ -2,18 +2,20 @@ import type { WizardConfig } from "@/features/quote-wizard/types";
 import {
   ContactDataSchema,
   ConsumptionDataSchema,
+  SystemDataSchema,
   InstallationDataSchema,
 } from "../validations/solar.schemas";
 
 export const SOLAR_WIZARD_CONFIG: WizardConfig = {
   id: "solar-quote",
-  totalSteps: 5,
+  totalSteps: 6,
 
   validation: {
     schemas: {
       1: ContactDataSchema,
       2: ConsumptionDataSchema,
-      3: InstallationDataSchema,
+      3: SystemDataSchema,
+      4: InstallationDataSchema,
     },
   },
 
@@ -29,6 +31,12 @@ export const SOLAR_WIZARD_CONFIG: WizardConfig = {
       label: "Consumo energético",
       shortLabel: "Consumo",
       component: "StepConsumption",
+    },
+    {
+      id: "system",
+      label: "Tipo de sistema",
+      shortLabel: "Sistema",
+      component: "StepSystem",
     },
     {
       id: "installation",
