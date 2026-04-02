@@ -5,45 +5,30 @@ import { z } from 'zod';
    ======================================== */
 
 export const ContactDataSchema = z.object({
-  name: z
-    .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre es demasiado largo'),
-  email: z
-    .string()
-    .email('Email inválido')
-    .toLowerCase()
-    .trim(),
-  phone: z
-    .string()
-    .regex(
-      /^\+?[1-9]\d{1,14}$/,
-      'Teléfono inválido. Formato: +541112345678 o 1112345678'
-    ),
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
+  email: z.string().email('Email inválido').toLowerCase().trim(),
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Teléfono inválido'),
   clientType: z.enum(['residential', 'industrial', 'agro'], {
-    errorMap: () => ({ message: 'Tipo de cliente inválido' })
+    errorMap: () => ({ message: 'Tipo de cliente inválido' }),
   }),
 });
 
 export const ConsumptionDataSchema = z.object({
-  monthlyKwh: z
-    .number()
-    .min(100, 'El consumo mínimo es 100 kWh/mes')
-    .max(50000, 'El consumo máximo es 50,000 kWh/mes'),
+  monthlyKwh: z.number().min(100, 'Mínimo 100 kWh/mes').max(50000, 'Máximo 50,000 kWh/mes'),
   timeProfile: z.enum(['day', 'night', 'mixed'], {
-    errorMap: () => ({ message: 'Perfil de consumo inválido' })
+    errorMap: () => ({ message: 'Perfil de consumo inválido' }),
   }),
 });
 
 export const SystemDataSchema = z.object({
   systemType: z.enum(['on-grid', 'off-grid', 'hybrid'], {
-    errorMap: () => ({ message: 'Tipo de sistema inválido' })
+    errorMap: () => ({ message: 'Tipo de sistema inválido' }),
   }),
 });
 
 export const InstallationDataSchema = z.object({
   mountingType: z.enum(['roof-sheet', 'roof-tile', 'ground', 'carport'], {
-    errorMap: () => ({ message: 'Tipo de instalación inválido' })
+    errorMap: () => ({ message: 'Tipo de instalación inválido' }),
   }),
 });
 
@@ -73,20 +58,14 @@ export type FormData = z.infer<typeof FormDataSchema>;
    SYSTEM TYPE COST MULTIPLIERS
    ======================================== */
 
-/**
- * Costos adicionales fijos por tipo de sistema (USD por kW instalado).
- * On-grid: solo inversor grid-tie (ya contemplado en el cálculo base).
- * Off-grid: agrega baterías + inversor off-grid.
- * Hybrid: agrega baterías + inversor híbrido (mayor costo que off-grid puro).
- */
 export const SYSTEM_TYPE_EXTRA_COST_PER_KW: Record<SystemType, number> = {
-  'on-grid':  0,    // sin costo adicional — es el caso base
-  'off-grid': 400,  // baterías + inversor off-grid
-  'hybrid':   600,  // baterías + inversor híbrido
+  'on-grid': 0,
+  'off-grid': 400,
+  'hybrid': 600,
 };
 
 /* ========================================
-   TIPOS DE CONFIGURACIÓN
+   SOLAR CONFIG TYPES
    ======================================== */
 
 export interface ElectricityTariff {
@@ -102,11 +81,11 @@ export interface ClientConfig {
 }
 
 export interface SolarSystemConfig {
-  panelPower: number;
-  panelEfficiency: number;
-  systemLosses: number;
-  systemEfficiency: number;
-  degradationRate: number;
+  panelPower: number;           // W por panel
+  panelEfficiency: number;      // % eficiencia del panel
+  systemLosses: number;         // % pérdidas del sistema
+  systemEfficiency: number;     // % = 100 - systemLosses (calculado al leer de DB)
+  degradationRate: number;      // % degradación anual
   peakSunHours: {
     day: number;
     night: number;
@@ -115,14 +94,18 @@ export interface SolarSystemConfig {
 }
 
 export interface CostConfig {
-  panelCost: number;
-  inverterCost: number;
-  inverterCostPerKw: number;
-  installationCostPerKw: number;
-  structureCostPerKw: number;
-  marginPercentage: number;
-  mountingCosts: {
+  panelCost: number;              // USD por panel
+  inverterCost: number;           // USD fijo base del inversor
+  inverterCostPerKw: number;      // USD por kW adicional del inversor
+  baseInstallationFee: number;    // USD fijo por proyecto (movilidad, logística)
+  laborCostPerKw: number;         // USD por kW (mano de obra)
+  structureCostPerPanel: number;  // USD por panel (rieles y anclajes)
+  marginPercentage: number;       // % margen sobre subtotal
+  mountingMultipliers: {          // multiplicador sobre costos operativos
     [K in MountingType]: number;
+  };
+  systemExtraCostPerKw: {         // USD extra por kW según tipo de sistema
+    [K in SystemType]: number;
   };
 }
 
@@ -143,7 +126,7 @@ export interface SolarConfig {
 }
 
 /* ========================================
-   TIPOS DE RESULTADOS
+   RESULT TYPES
    ======================================== */
 
 export interface SystemDetails {
@@ -157,12 +140,17 @@ export interface SystemDetails {
 }
 
 export interface CostBreakdown {
+  // Equipamiento
   panels: number;
   inverter: number;
-  installation: number;
+  // Operativo (afectado por mountingMultiplier)
+  baseInstallation: number;
+  labor: number;
   structure: number;
-  mounting: number;
+  operativeSubtotal: number;    // suma de los 3 anteriores × multiplier
+  // Sistema
   systemTypeExtra: number;
+  // Totales
   subtotal: number;
   margin: number;
   total: number;

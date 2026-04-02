@@ -10,16 +10,12 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
     include: {
       quoteConfigs: {
         where: { type: QuoteType.SOLAR, isActive: true },
-        include: {
-          solarConfig: true,
-        },
+        include: { solarConfig: true },
       },
     },
   });
 
-  if (!provider) {
-    throw new Error(`Provider '${providerSlug}' no encontrado`);
-  }
+  if (!provider) throw new Error(`Provider '${providerSlug}' no encontrado`);
 
   const quoteConfig = provider.quoteConfigs[0];
   if (!quoteConfig?.solarConfig) {
@@ -28,17 +24,10 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
 
   const db = quoteConfig.solarConfig;
 
-  // systemEfficiency se deriva de systemLosses — nunca puede ser undefined
-  // systemLosses: 15 → systemEfficiency: 85
-  const systemEfficiency = 100 - db.systemLosses;
-
   return {
     clients: {
       residential: {
-        tariff: {
-          energyCost: db.residentialEnergyCost,
-          fixedCharge: db.residentialFixedCharge,
-        },
+        tariff: { energyCost: db.residentialEnergyCost, fixedCharge: db.residentialFixedCharge },
         taxRate: db.residentialTaxRate,
         inflationRate: db.residentialInflationRate,
       },
@@ -52,10 +41,7 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
         inflationRate: db.industrialInflationRate,
       },
       agro: {
-        tariff: {
-          energyCost: db.agroEnergyCost,
-          fixedCharge: db.agroFixedCharge,
-        },
+        tariff: { energyCost: db.agroEnergyCost, fixedCharge: db.agroFixedCharge },
         taxRate: db.agroTaxRate,
         inflationRate: db.agroInflationRate,
       },
@@ -64,7 +50,7 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
       panelPower: db.panelPower,
       panelEfficiency: db.panelEfficiency,
       systemLosses: db.systemLosses,
-      systemEfficiency,           // calculado, nunca undefined
+      systemEfficiency: 100 - db.systemLosses,
       degradationRate: db.degradationRate,
       peakSunHours: {
         day: db.peakSunHoursDay,
@@ -76,14 +62,20 @@ export async function getSolarConfig(providerSlug: string): Promise<SolarConfig>
       panelCost: db.panelCost,
       inverterCost: db.inverterCost,
       inverterCostPerKw: db.inverterCostPerKw,
-      installationCostPerKw: db.installationCostPerKw,
-      structureCostPerKw: db.structureCostPerKw,
+      baseInstallationFee: db.baseInstallationFee,
+      laborCostPerKw: db.laborCostPerKw,
+      structureCostPerPanel: db.structureCostPerPanel,
       marginPercentage: db.marginPercentage,
-      mountingCosts: {
-        "roof-sheet": db.mountingCostRoofSheet,
-        "roof-tile": db.mountingCostRoofTile,
-        "ground": db.mountingCostGround,
-        "carport": db.mountingCostCarport,
+      mountingMultipliers: {
+        'roof-sheet': db.mountingMultiplierRoofSheet,
+        'roof-tile': db.mountingMultiplierRoofTile,
+        'ground': db.mountingMultiplierGround,
+        'carport': db.mountingMultiplierCarport,
+      },
+      systemExtraCostPerKw: {
+        'on-grid': 0,
+        'off-grid': db.systemExtraCostOffGrid,
+        'hybrid': db.systemExtraCostHybrid,
       },
     },
     financing: {

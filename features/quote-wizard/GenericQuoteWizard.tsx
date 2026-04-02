@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { getQuoterPlugin } from "@/features/quoters/registry";
 import { useWizardNavigation } from "./hooks/useWizardNavigation";
 import { useWizardValidation } from "./hooks/useWizardValidation";
+import { useSaveQuote } from "@/features/quote-wizard/hooks/useSaveQuote";
 import { Wizard } from "./components/Wizard";
 import type { QuoterStepContext } from "./types";
+import type { FormData, SolarCalculation } from "@/lib/solar/solar-types";
 
 interface GenericQuoteWizardProps {
   quoterId: string;
@@ -27,43 +29,54 @@ function QuoteWizardInner({
 }) {
   const navigation = useWizardNavigation(plugin.wizardConfig.totalSteps);
   const { errors, validateStep } = useWizardValidation(plugin.wizardConfig.validation);
+  const { mutate: saveQuote } = useSaveQuote();
 
   const [formData, setFormData] = useState(plugin.initialFormData);
   const [calculationResult, setCalculationResult] = useState<unknown>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  // Ref para siempre tener el formData más actualizado en handleNext,
-  // evitando el stale closure cuando React aún no commitó el último setState
-  const formDataRef = useRef(formData);
-
   const handleFormChange = useCallback((data: unknown) => {
-    formDataRef.current = data;
     setFormData(data);
   }, []);
 
   const handleNext = async () => {
     const currentStepConfig = plugin.wizardConfig.steps[navigation.currentStep - 1];
 
-    // Usar ref para validación — garantiza el valor más reciente
-    const currentFormData = formDataRef.current;
-
     if (!currentStepConfig?.skipValidation) {
-      const stepData = plugin.getStepData(navigation.currentStep, currentFormData);
+      const stepData = plugin.getStepData(navigation.currentStep, formData);
       const isValid = validateStep(navigation.currentStep, stepData);
       if (!isValid) return;
     }
 
-    const isPreResultStep = navigation.currentStep === plugin.wizardConfig.totalSteps - 2;
+    // The step just before results triggers the calculation
+    const isPreResultStep =
+      navigation.currentStep === plugin.wizardConfig.totalSteps - 2;
 
     if (isPreResultStep && !calculationResult) {
       setIsCalculating(true);
       try {
-        // Usar ref para el cálculo — garantiza el valor más reciente
-        const result = await plugin.calculate(currentFormData, tenant);
+        const result = await plugin.calculate(formData, tenant);
         setCalculationResult(result);
+
+        // Fire-and-forget: persist quote + lead. We don't block navigation
+        // on the save — the user sees results immediately. If save fails it
+        // logs server-side; we can add a toast here if needed.
+        saveQuote(
+          {
+            tenant,
+            formData: formData as FormData,
+            calculation: result as SolarCalculation,
+          },
+          {
+            onError: (err) => {
+              console.error("[GenericQuoteWizard] saveQuote failed:", err);
+            },
+          },
+        );
+
         navigation.next();
       } catch (error) {
-        console.error(`[${plugin.id}] Error en cálculo:`, error);
+        console.error(`[${plugin.id}] Calculation error:`, error);
       } finally {
         setIsCalculating(false);
       }
@@ -83,7 +96,8 @@ function QuoteWizardInner({
     id: stepRenderer.id,
     label: stepRenderer.label,
     shortLabel: stepRenderer.shortLabel,
-    render: () => stepRenderer.render(formData, handleFormChange, errors, context),
+    render: () =>
+      stepRenderer.render(formData, handleFormChange, errors, context),
   }));
 
   return (

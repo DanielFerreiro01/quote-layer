@@ -1,90 +1,91 @@
 // ============================================
-// QUOTE CONFIG TYPES
+// QUOTE CONFIG TYPES — Dashboard
+// Representa la configuración editable en quote-config
+// Se convierte a SolarConfig para el cálculo real
 // ============================================
 
 export interface QuoteConfig {
-  // General Settings
-  baseCostPerKw: number;
-  electricityCostPerKwh: number;
+  // Sistema
   panelPower: number;
-  systemEfficiency: number;
+  systemEfficiency: number;  // 0-100 (%)
   peakSunHours: number;
-  
-  // Client Type Multipliers
-  clientMultipliers: {
-    residential: number;
-    industrial: number;
-    agro: number;
-  };
-  
-  // Mounting Type Multipliers
+
+  // Equipamiento
+  panelCost: number;
+  inverterCost: number;
+  inverterCostPerKw: number;
+
+  // Operativo
+  baseInstallationFee: number;
+  laborCostPerKw: number;
+  structureCostPerPanel: number;
+
+  // Multiplicadores de montaje
   mountingMultipliers: {
     roofSheet: number;
     roofTile: number;
     ground: number;
     carport: number;
   };
-  
-  // Financial Settings
+
+  // Extra por tipo de sistema
+  systemExtraCostPerKw: {
+    "on-grid": number;
+    "off-grid": number;
+    "hybrid": number;
+  };
+
+  // Financiero
   marginPercentage: number;
   enableFinancing: boolean;
   interestRate: number;
   loanTermYears: number;
 }
 
-// ============================================
-// QUOTE PREVIEW INPUTS
-// ============================================
-
 export interface QuotePreviewInputs {
   monthlyKwh: number;
-  clientType: 'residential' | 'industrial' | 'agro';
-  mountingType: 'roofSheet' | 'roofTile' | 'ground' | 'carport';
+  clientType: "residential" | "industrial" | "agro";
+  mountingType: "roofSheet" | "roofTile" | "ground" | "carport";
+  systemType: "on-grid" | "off-grid" | "hybrid";
 }
 
-// ============================================
-// QUOTE CALCULATION OUTPUTS
-// ============================================
-
 export interface QuoteCalculationOutputs {
-  systemSize: number;          // kW
+  systemSize: number;
   panelCount: number;
-  annualProduction: number;    // kWh
-  totalCost: number;           // $
-  monthlySavings: number;      // $
+  annualProduction: number;
+  totalCost: number;
+  monthlySavings: number;
   paybackYears: number;
 }
 
-// ============================================
-// DEFAULT CONFIGURATION
-// ============================================
-
 export const defaultQuoteConfig: QuoteConfig = {
-  // General Settings
-  baseCostPerKw: 1200,
-  electricityCostPerKwh: 0.15,
-  panelPower: 550,              // Watts
-  systemEfficiency: 0.85,       // 85%
-  peakSunHours: 5,             // hours per day
-  
-  // Client Type Multipliers
-  clientMultipliers: {
-    residential: 1.0,
-    industrial: 0.9,
-    agro: 0.95,
-  },
-  
-  // Mounting Type Multipliers
+  panelPower: 550,
+  systemEfficiency: 85,
+  peakSunHours: 5,
+
+  panelCost: 200,
+  inverterCost: 500,
+  inverterCostPerKw: 300,
+
+  baseInstallationFee: 300,
+  laborCostPerKw: 150,
+  structureCostPerPanel: 45,
+
   mountingMultipliers: {
     roofSheet: 1.0,
-    roofTile: 1.15,
-    ground: 1.25,
-    carport: 1.35,
+    roofTile: 1.2,
+    ground: 1.3,
+    carport: 1.4,
   },
-  
-  // Financial Settings
-  marginPercentage: 25,
+
+  systemExtraCostPerKw: {
+    "on-grid": 0,
+    "off-grid": 400,
+    "hybrid": 600,
+  },
+
+  marginPercentage: 20,
   enableFinancing: true,
-  interestRate: 8.5,
-  loanTermYears: 10,
+  interestRate: 8,
+  loanTermYears: 5,
 };
