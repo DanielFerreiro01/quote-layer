@@ -64,6 +64,7 @@ export function LeadsTable({
             description="Los leads aparecerán aquí cuando los clientes envíen solicitudes de cotización."
           />
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -89,6 +90,7 @@ export function LeadsTable({
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </CardContent>
     </Card>
