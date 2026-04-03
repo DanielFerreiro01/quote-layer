@@ -2,37 +2,15 @@
 
 import { Activity, TrendingUp, Users, DollarSign } from "lucide-react";
 import { StatCard } from "../shared/StatCard";
-
-interface StatsData {
-  totalQuotes: {
-    value: number;
-    change: number;
-    trend: 'up' | 'down';
-  };
-  activeLeads: {
-    value: number;
-    change: number;
-    trend: 'up' | 'down';
-  };
-  avgQuoteValue: {
-    value: number;
-    change: number;
-    trend: 'up' | 'down';
-  };
-  conversionRate: {
-    value: number;
-    change: number;
-    trend: 'up' | 'down';
-  };
-}
+import type { DashboardStats } from "@/features/dashboard/types";
 
 interface StatsCardsProps {
-  stats: StatsData;
+  stats?: DashboardStats;
   isLoading?: boolean;
 }
 
 export function StatsCards({ stats, isLoading }: StatsCardsProps) {
-  if (isLoading) {
+  if (isLoading || !stats) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (

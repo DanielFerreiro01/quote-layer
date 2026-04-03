@@ -19,21 +19,23 @@ interface LeadsTableProps {
   onViewDetails: (lead: Lead) => void;
   onUpdateStatus: (leadId: string, status: LeadStatus) => void;
   onDelete?: (leadId: string) => void;
+  updatingLeadId?: string | null;
 }
 
-export function LeadsTable({ 
-  leads, 
-  isLoading, 
-  onViewDetails, 
+export function LeadsTable({
+  leads,
+  isLoading,
+  onViewDetails,
   onUpdateStatus,
-  onDelete 
+  onDelete,
+  updatingLeadId,
 }: LeadsTableProps) {
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>All Leads</CardTitle>
-          <CardDescription>Loading leads...</CardDescription>
+          <CardTitle>Todos los leads</CardTitle>
+          <CardDescription>Cargando leads...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -49,28 +51,28 @@ export function LeadsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>All Leads</CardTitle>
+        <CardTitle>Todos los leads</CardTitle>
         <CardDescription>
-          {leads.length} total leads from your quote calculator
+          {leads.length} leads cargados
         </CardDescription>
       </CardHeader>
       <CardContent>
         {leads.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No leads yet"
-            description="Leads will appear here when customers submit quote requests through your calculator."
+            title="Sin leads"
+            description="Los leads aparecerán aquí cuando los clientes envíen solicitudes de cotización."
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Lead</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>System</TableHead>
-                <TableHead>Quote Value</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Contacto</TableHead>
+                <TableHead>Sistema</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha</TableHead>
                 <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
@@ -82,6 +84,7 @@ export function LeadsTable({
                   onViewDetails={onViewDetails}
                   onUpdateStatus={onUpdateStatus}
                   onDelete={onDelete}
+                  isUpdating={updatingLeadId === lead.id}
                 />
               ))}
             </TableBody>
