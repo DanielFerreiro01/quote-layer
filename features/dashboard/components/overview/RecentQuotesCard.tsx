@@ -40,15 +40,15 @@ export function RecentQuotesCard({ quotes, isLoading }: RecentQuotesCardProps) {
   }
 
   return (
-    <Card className="flex flex-col lg:col-span-2">
-      <CardHeader className="flex-shrink-0 border-b border-border">
+    <Card className="flex flex-col lg:col-span-2 gap-0 py-0">
+      <CardHeader className="flex-shrink-0 border-b border-border py-6">
         <CardTitle>Recent Quotes</CardTitle>
         <CardDescription>
           Latest quote requests from your calculator
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto p-0 -mt-6">
-        <div className="max-h-[340px] space-y-3 overflow-y-auto px-6 py-3">
+      <CardContent className="flex-1 overflow-hidden p-0">
+        <div className="max-h-[340px] space-y-3 overflow-y-auto px-6">
           {quotes.map((quote) => (
             <div
               key={quote.id}
@@ -87,7 +87,7 @@ export function RecentQuotesCard({ quotes, isLoading }: RecentQuotesCardProps) {
           ))}
         </div>
       </CardContent>
-      <div className="flex-shrink-0 border-t border-border px-6 pt-6 -mb-6">
+      <div className="flex-shrink-0 border-t border-border px-6 py-6">
         <Button variant="outline" className="w-full bg-transparent" asChild>
           <Link href="/dashboard/leads">View All Leads</Link>
         </Button>
