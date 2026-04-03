@@ -52,9 +52,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-16 flex-row items-center border-b border-sidebar-border px-4">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
+      <SidebarHeader className="h-16 flex-row items-center justify-center border-b border-sidebar-border px-4 group-data-[collapsible=icon]:px-0">
+        <Link href="/dashboard" className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary shrink-0">
             <Zap className="size-4 text-primary-foreground" />
           </div>
           <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
