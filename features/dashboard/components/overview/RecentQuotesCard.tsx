@@ -48,7 +48,7 @@ export function RecentQuotesCard({ quotes, isLoading }: RecentQuotesCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto p-0">
-        <div className="max-h-[340px] space-y-3 overflow-y-auto p-6">
+        <div className="max-h-[340px] space-y-3 overflow-y-auto px-6">
           {quotes.map((quote) => (
             <div
               key={quote.id}
@@ -87,7 +87,7 @@ export function RecentQuotesCard({ quotes, isLoading }: RecentQuotesCardProps) {
           ))}
         </div>
       </CardContent>
-      <div className="flex-shrink-0 border-t border-border p-4">
+      <div className="flex-shrink-0 border-t border-border px-4 py-6">
         <Button variant="outline" className="w-full bg-transparent" asChild>
           <Link href="/dashboard/leads">View All Leads</Link>
         </Button>
