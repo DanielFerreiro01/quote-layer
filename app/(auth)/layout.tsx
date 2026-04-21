@@ -32,7 +32,7 @@ export default function AuthLayout({
           {/* Headline */}
           <div className="flex flex-col gap-3">
             <h1 className="text-balance text-4xl font-bold leading-tight text-foreground">
-              Transforma tu proceso de cotización solar
+              Transforma tu proceso de cotización
             </h1>
             <p className="text-pretty text-base leading-relaxed text-muted-foreground">
               De cotizar por WhatsApp a recibir leads calificados
